@@ -1,0 +1,25 @@
+{
+  "name": "fantasy-frontiers",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.4.2",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --stream --filter @fantasy-frontiers/game --filter @fantasy-frontiers/server dev",
+    "dev:game": "pnpm --filter @fantasy-frontiers/game dev",
+    "dev:server": "pnpm --filter @fantasy-frontiers/server dev",
+    "build": "pnpm --recursive --if-present build",
+    "typecheck": "pnpm --recursive --if-present typecheck && tsc --noEmit -p tsconfig.tools.json",
+    "test": "vitest run --passWithNoTests",
+    "test:e2e": "playwright test",
+    "verify": "pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.0.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  }
+}

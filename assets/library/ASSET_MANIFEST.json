@@ -1,0 +1,658 @@
+{
+  "assets": [
+    {
+      "id": "ff.neutral.background",
+      "kind": "background",
+      "license": {
+        "attribution": "Fantasy Frontiers project-authored placeholder art",
+        "spdx": "CC0-1.0"
+      },
+      "path": "assets/library/neutral/runtime/background.png",
+      "tags": [
+        "neutral",
+        "stone",
+        "forest"
+      ],
+      "themeFamilies": [
+        "fantasy",
+        "dark_fantasy",
+        "oriental",
+        "nature",
+        "steampunk",
+        "sci_fi",
+        "cyberpunk",
+        "ocean"
+      ]
+    },
+    {
+      "id": "ff.neutral.panel",
+      "kind": "panel",
+      "license": {
+        "attribution": "Fantasy Frontiers project-authored placeholder art",
+        "spdx": "CC0-1.0"
+      },
+      "path": "assets/library/neutral/runtime/panel.png",
+      "tags": [
+        "neutral",
+        "wood",
+        "stone",
+        "ui"
+      ],
+      "themeFamilies": [
+        "fantasy",
+        "dark_fantasy",
+        "oriental",
+        "nature",
+        "steampunk",
+        "sci_fi",
+        "cyberpunk",
+        "ocean"
+      ]
+    },
+    {
+      "id": "ff.neutral.button",
+      "kind": "button",
+      "license": {
+        "attribution": "Fantasy Frontiers project-authored placeholder art",
+        "spdx": "CC0-1.0"
+      },
+      "path": "assets/library/neutral/runtime/button.png",
+      "tags": [
+        "neutral",
+        "ui"
+      ],
+      "themeFamilies": [
+        "fantasy",
+        "dark_fantasy",
+        "oriental",
+        "nature",
+        "steampunk",
+        "sci_fi",
+        "cyberpunk",
+        "ocean"
+      ]
+    },
+    {
+      "id": "ff.neutral.frame",
+      "kind": "frame",
+      "license": {
+        "attribution": "Fantasy Frontiers project-authored placeholder art",
+        "spdx": "CC0-1.0"
+      },
+      "path": "assets/library/neutral/runtime/frame.png",
+      "tags": [
+        "neutral",
+        "ornate",
+        "ui"
+      ],
+      "themeFamilies": [
+        "fantasy",
+        "dark_fantasy",
+        "oriental",
+        "nature",
+        "steampunk",
+        "sci_fi",
+        "cyberpunk",
+        "ocean"
+      ]
+    },
+    {
+      "id": "ff.neutral.decoration",
+      "kind": "decoration",
+      "license": {
+        "attribution": "Fantasy Frontiers project-authored placeholder art",
+        "spdx": "CC0-1.0"
+      },
+      "path": "assets/library/neutral/runtime/decoration.png",
+      "tags": [
+        "neutral",
+        "crest"
+      ],
+      "themeFamilies": [
+        "fantasy",
+        "dark_fantasy",
+        "oriental",
+        "nature",
+        "steampunk",
+        "sci_fi",
+        "cyberpunk",
+        "ocean"
+      ]
+    },
+    {
+      "id": "ff.neutral.tower",
+      "kind": "tower",
+      "license": {
+        "attribution": "Fantasy Frontiers project-authored placeholder art",
+        "spdx": "CC0-1.0"
+      },
+      "path": "assets/library/neutral/runtime/tower.png",
+      "tags": [
+        "neutral",
+        "tower",
+        "defense"
+      ],
+      "themeFamilies": [
+        "fantasy",
+        "dark_fantasy",
+        "oriental",
+        "nature",
+        "steampunk",
+        "sci_fi",
+        "cyberpunk",
+        "ocean"
+      ]
+    },
+    {
+      "id": "ff.neutral.enemy",
+      "kind": "enemy",
+      "license": {
+        "attribution": "Fantasy Frontiers project-authored placeholder art",
+        "spdx": "CC0-1.0"
+      },
+      "path": "assets/library/neutral/runtime/enemy.png",
+      "tags": [
+        "neutral",
+        "enemy",
+        "creature"
+      ],
+      "themeFamilies": [
+        "fantasy",
+        "dark_fantasy",
+        "oriental",
+        "nature",
+        "steampunk",
+        "sci_fi",
+        "cyberpunk",
+        "ocean"
+      ]
+    },
+    {
+      "id": "ff.neutral.tile",
+      "kind": "tile",
+      "license": {
+        "attribution": "Fantasy Frontiers project-authored placeholder art",
+        "spdx": "CC0-1.0"
+      },
+      "path": "assets/library/neutral/runtime/tile.png",
+      "tags": [
+        "neutral",
+        "terrain",
+        "tile"
+      ],
+      "themeFamilies": [
+        "fantasy",
+        "dark_fantasy",
+        "oriental",
+        "nature",
+        "steampunk",
+        "sci_fi",
+        "cyberpunk",
+        "ocean"
+      ]
+    },
+    {
+      "id": "ff.kenney.fantasy-ui.border",
+      "kind": "frame",
+      "license": {
+        "attribution": "Kenney (https://kenney.nl/assets/fantasy-ui-borders), CC0-1.0; license copy: assets/library/third-party/kenney/fantasy-ui-borders/License.txt",
+        "spdx": "CC0-1.0"
+      },
+      "path": "assets/library/third-party/kenney/fantasy-ui-borders/panel-transparent-border-000.png",
+      "tags": [
+        "ui",
+        "fantasy",
+        "panel",
+        "border",
+        "transparent"
+      ],
+      "themeFamilies": [
+        "fantasy",
+        "dark_fantasy"
+      ]
+    },
+    {
+      "id": "ff.border-outpost.build-slot",
+      "path": "assets/library/border-outpost/runtime/build-slot.png",
+      "kind": "tile",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "build-slot"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.enemy-boss",
+      "path": "assets/library/border-outpost/runtime/enemy-boss.png",
+      "kind": "enemy",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "enemy-boss"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.enemy-fast",
+      "path": "assets/library/border-outpost/runtime/enemy-fast.png",
+      "kind": "enemy",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "enemy-fast"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.enemy-normal",
+      "path": "assets/library/border-outpost/runtime/enemy-normal.png",
+      "kind": "enemy",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "enemy-normal"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.enemy-tank",
+      "path": "assets/library/border-outpost/runtime/enemy-tank.png",
+      "kind": "enemy",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "enemy-tank"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.grass-a",
+      "path": "assets/library/border-outpost/runtime/grass-a.png",
+      "kind": "tile",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "grass-a"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.grass-b",
+      "path": "assets/library/border-outpost/runtime/grass-b.png",
+      "kind": "tile",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "grass-b"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.icon-gold",
+      "path": "assets/library/border-outpost/runtime/icon-gold.png",
+      "kind": "button",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "icon-gold"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.icon-heart",
+      "path": "assets/library/border-outpost/runtime/icon-heart.png",
+      "kind": "button",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "icon-heart"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.icon-pause",
+      "path": "assets/library/border-outpost/runtime/icon-pause.png",
+      "kind": "button",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "icon-pause"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.icon-play",
+      "path": "assets/library/border-outpost/runtime/icon-play.png",
+      "kind": "button",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "icon-play"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.icon-speed",
+      "path": "assets/library/border-outpost/runtime/icon-speed.png",
+      "kind": "button",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "icon-speed"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.icon-wave",
+      "path": "assets/library/border-outpost/runtime/icon-wave.png",
+      "kind": "button",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "icon-wave"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.keep",
+      "path": "assets/library/border-outpost/runtime/keep.png",
+      "kind": "decoration",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "keep"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.prop-bush",
+      "path": "assets/library/border-outpost/runtime/prop-bush.png",
+      "kind": "decoration",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "prop-bush"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.prop-flag",
+      "path": "assets/library/border-outpost/runtime/prop-flag.png",
+      "kind": "decoration",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "prop-flag"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.prop-rock",
+      "path": "assets/library/border-outpost/runtime/prop-rock.png",
+      "kind": "decoration",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "prop-rock"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.prop-tree",
+      "path": "assets/library/border-outpost/runtime/prop-tree.png",
+      "kind": "decoration",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "prop-tree"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.rift",
+      "path": "assets/library/border-outpost/runtime/rift.png",
+      "kind": "decoration",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "rift"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.stone-road",
+      "path": "assets/library/border-outpost/runtime/stone-road.png",
+      "kind": "tile",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "stone-road"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.tower-aoe",
+      "path": "assets/library/border-outpost/runtime/tower-aoe.png",
+      "kind": "tower",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "tower-aoe"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.tower-basic",
+      "path": "assets/library/border-outpost/runtime/tower-basic.png",
+      "kind": "tower",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "tower-basic"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.tower-heavy",
+      "path": "assets/library/border-outpost/runtime/tower-heavy.png",
+      "kind": "tower",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "tower-heavy"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.tower-slow",
+      "path": "assets/library/border-outpost/runtime/tower-slow.png",
+      "kind": "tower",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "tower-slow"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.workshop-empty",
+      "path": "assets/library/border-outpost/runtime/workshop-empty.png",
+      "kind": "decoration",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "workshop-empty"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    },
+    {
+      "id": "ff.border-outpost.world-border-outpost",
+      "path": "assets/library/border-outpost/runtime/world-border-outpost.png",
+      "kind": "background",
+      "tags": [
+        "border-outpost",
+        "fantasy",
+        "world-border-outpost"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Fantasy Frontiers project-authored SVG art"
+      }
+    }
+  ],
+  "version": "1.0.0"
+}

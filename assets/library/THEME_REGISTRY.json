@@ -1,0 +1,183 @@
+{
+  "version": "1.0.0",
+  "packs": [
+    {
+      "id": "ff-fantasy",
+      "themeFamily": "fantasy",
+      "similarFamilies": [
+        "dark_fantasy",
+        "oriental",
+        "nature",
+        "steampunk",
+        "sci_fi",
+        "cyberpunk",
+        "ocean"
+      ],
+      "assets": {
+        "backgroundId": "ff.neutral.background",
+        "panelId": "ff.neutral.panel",
+        "buttonId": "ff.neutral.button",
+        "frameId": "ff.kenney.fantasy-ui.border",
+        "decorationIds": [
+          "ff.neutral.decoration",
+          "ff.neutral.tower",
+          "ff.neutral.enemy",
+          "ff.neutral.tile"
+        ]
+      },
+      "colors": {
+        "primary": "#b3d18c",
+        "secondary": "#314638",
+        "accent": "#ffd26b",
+        "background": "#101a1a",
+        "text": "#e6eee5"
+      },
+      "presentationAssets": {
+        "terrainTileIds": [
+          "ff.border-outpost.grass-a",
+          "ff.border-outpost.grass-b"
+        ],
+        "pathTileId": "ff.border-outpost.stone-road",
+        "buildSlotId": "ff.border-outpost.build-slot",
+        "spawnId": "ff.border-outpost.rift",
+        "baseId": "ff.border-outpost.keep",
+        "towerIds": {
+          "basic": "ff.border-outpost.tower-basic",
+          "aoe": "ff.border-outpost.tower-aoe",
+          "slow": "ff.border-outpost.tower-slow",
+          "heavy": "ff.border-outpost.tower-heavy"
+        },
+        "enemyIds": {
+          "normal": "ff.border-outpost.enemy-normal",
+          "fast": "ff.border-outpost.enemy-fast",
+          "tank": "ff.border-outpost.enemy-tank",
+          "boss": "ff.border-outpost.enemy-boss"
+        },
+        "hudIconIds": {
+          "hp": "ff.border-outpost.icon-heart",
+          "gold": "ff.border-outpost.icon-gold",
+          "wave": "ff.border-outpost.icon-wave",
+          "pause": "ff.border-outpost.icon-pause",
+          "speed": "ff.border-outpost.icon-speed",
+          "play": "ff.border-outpost.icon-play"
+        },
+        "decorationIds": [
+          "ff.border-outpost.prop-tree",
+          "ff.border-outpost.prop-rock",
+          "ff.border-outpost.prop-bush",
+          "ff.border-outpost.prop-flag"
+        ],
+        "worldThumbnailId": "ff.border-outpost.world-border-outpost",
+        "workshopEmptyId": "ff.border-outpost.workshop-empty"
+      }
+    },
+    {
+      "id": "ff-nature",
+      "themeFamily": "nature",
+      "similarFamilies": [
+        "ocean",
+        "oriental",
+        "dark_fantasy"
+      ],
+      "assets": {
+        "backgroundId": "ff.neutral.background",
+        "panelId": "ff.neutral.panel",
+        "buttonId": "ff.neutral.button",
+        "frameId": "ff.neutral.frame",
+        "decorationIds": [
+          "ff.neutral.decoration",
+          "ff.neutral.tower",
+          "ff.neutral.enemy",
+          "ff.neutral.tile"
+        ]
+      },
+      "colors": {
+        "primary": "#91bd77",
+        "secondary": "#29483b",
+        "accent": "#e4c979",
+        "background": "#101a1a",
+        "text": "#e6eee5"
+      }
+    },
+    {
+      "id": "ff-steam",
+      "themeFamily": "steampunk",
+      "similarFamilies": [
+        "sci_fi",
+        "cyberpunk",
+        "dark_fantasy"
+      ],
+      "assets": {
+        "backgroundId": "ff.neutral.background",
+        "panelId": "ff.neutral.panel",
+        "buttonId": "ff.neutral.button",
+        "frameId": "ff.neutral.frame",
+        "decorationIds": [
+          "ff.neutral.decoration",
+          "ff.neutral.tower",
+          "ff.neutral.enemy",
+          "ff.neutral.tile"
+        ]
+      },
+      "colors": {
+        "primary": "#c69a62",
+        "secondary": "#493b2c",
+        "accent": "#edbd68",
+        "background": "#1a1713",
+        "text": "#f0e7d7"
+      }
+    },
+    {
+      "id": "ff-ocean",
+      "themeFamily": "ocean",
+      "similarFamilies": [
+        "nature",
+        "oriental",
+        "dark_fantasy"
+      ],
+      "assets": {
+        "backgroundId": "ff.neutral.background",
+        "panelId": "ff.neutral.panel",
+        "buttonId": "ff.neutral.button",
+        "frameId": "ff.neutral.frame",
+        "decorationIds": [
+          "ff.neutral.decoration",
+          "ff.neutral.tower",
+          "ff.neutral.enemy",
+          "ff.neutral.tile"
+        ]
+      },
+      "colors": {
+        "primary": "#70b8c5",
+        "secondary": "#29434b",
+        "accent": "#f0ca77",
+        "background": "#101a20",
+        "text": "#e3f0ed"
+      }
+    },
+    {
+      "id": "ff-neutral",
+      "themeFamily": "fantasy",
+      "similarFamilies": [],
+      "assets": {
+        "backgroundId": "ff.neutral.background",
+        "panelId": "ff.neutral.panel",
+        "buttonId": "ff.neutral.button",
+        "frameId": "ff.neutral.frame",
+        "decorationIds": [
+          "ff.neutral.decoration",
+          "ff.neutral.tower",
+          "ff.neutral.enemy",
+          "ff.neutral.tile"
+        ]
+      },
+      "colors": {
+        "primary": "#b3d18c",
+        "secondary": "#314638",
+        "accent": "#ffd26b",
+        "background": "#101a1a",
+        "text": "#e6eee5"
+      }
+    }
+  ]
+}

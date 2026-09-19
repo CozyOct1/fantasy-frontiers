@@ -1,0 +1,42 @@
+- main [ref=f17e2]:
+  - region "塔防游戏" [ref=f17e39]:
+    - generic [ref=f17e40]:
+      - generic "等距塔防地图" [ref=f17e41]
+      - generic:
+        - button "返回世界详情" [ref=f17e43] [cursor=pointer]
+        - paragraph [ref=f17e44]: 边境哨站 · EASY · 6 波
+        - status [ref=f17e45]: 部署阶段
+      - region "战斗状态" [ref=f17e46]:
+        - generic [ref=f17e47]:
+          - generic [ref=f17e48]: 基地生命
+          - strong [ref=f17e49]: 30 / 30
+        - generic [ref=f17e51]:
+          - generic [ref=f17e52]: 金币
+          - strong [ref=f17e53]: "500"
+        - generic [ref=f17e55]:
+          - generic [ref=f17e56]: 波次
+          - strong [ref=f17e57]: 0 / 6
+      - generic "战斗控制" [ref=f17e58]:
+        - button "暂停" [disabled] [ref=f17e59]
+        - button "1× 速度" [ref=f17e61] [cursor=pointer]
+      - generic "地图标记":
+        - generic: 裂隙 · 敌人入口
+        - generic: 堡垒 · 基地
+        - generic: 石台 · 建造位
+      - complementary "游戏控制" [ref=f17e62]:
+        - region "选择防御塔" [ref=f17e63]:
+          - generic [ref=f17e64]:
+            - button "弩塔 ✦ 80" [ref=f17e65] [cursor=pointer]:
+              - generic [ref=f17e66]: 弩塔
+              - generic [ref=f17e67]: ✦ 80
+            - button "爆裂塔 ✦ 120" [ref=f17e68] [cursor=pointer]:
+              - generic [ref=f17e69]: 爆裂塔
+              - generic [ref=f17e70]: ✦ 120
+            - button "霜缚塔 ✦ 100" [ref=f17e71] [cursor=pointer]:
+              - generic [ref=f17e72]: 霜缚塔
+              - generic [ref=f17e73]: ✦ 100
+            - button "重炮塔 ✦ 160" [ref=f17e74] [cursor=pointer]:
+              - generic [ref=f17e75]: 重炮塔
+              - generic [ref=f17e76]: ✦ 160
+        - button "开始第一波" [ref=f17e77] [cursor=pointer]
+      - paragraph [ref=f17e78]: 守住防线，迎接下一场考验。 选择防御塔，再点击地图上的空心建造位。

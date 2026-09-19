@@ -1,0 +1,21 @@
+{
+  "name": "@fantasy-frontiers/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --import tsx --watch src/server.ts",
+    "build": "pnpm typecheck && tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fantasy-frontiers/metrics": "workspace:*",
+    "@fantasy-frontiers/shared": "workspace:*",
+    "@fantasy-frontiers/maps": "workspace:*",
+    "@fantasy-frontiers/simulator": "workspace:*",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.6"
+  }
+}

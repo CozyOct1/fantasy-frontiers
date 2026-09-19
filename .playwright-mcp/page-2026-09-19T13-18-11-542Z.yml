@@ -1,0 +1,72 @@
+- main [ref=f1e2]:
+  - generic [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - paragraph [ref=f1e5]: FANTASY FRONTIERS · V1 PLAYABLE SLICE
+      - heading "幻想防线" [level=1] [ref=f1e6]
+      - paragraph [ref=f1e7]: 边境哨站 · Easy · 6 波
+    - status [ref=f1e8]: 部署阶段
+  - region "我的世界" [ref=f1e9]:
+    - generic [ref=f1e10]:
+      - paragraph [ref=f1e11]: MY WORLDS · LOCAL SAVE
+      - heading "我的世界" [level=2] [ref=f1e12]
+    - button "创意工坊" [ref=f1e13] [cursor=pointer]
+    - generic [ref=f1e14]: 正在连接本地存档…
+  - region "创建主题世界" [ref=f1e15]:
+    - generic [ref=f1e16]:
+      - generic [ref=f1e17]: 创建一个新世界
+      - generic [ref=f1e18]:
+        - textbox "创建一个新世界" [ref=f1e19]:
+          - /placeholder: 例如：漂浮群岛上的星象守卫抵挡虚空生物
+        - button "生成世界" [ref=f1e20] [cursor=pointer]
+  - navigation "选择关卡难度" [ref=f1e21]:
+    - generic [ref=f1e22]: 边境战役
+    - button "Easy" [ref=f1e23] [cursor=pointer]
+    - button "Medium" [ref=f1e24] [cursor=pointer]
+    - button "Hard" [ref=f1e25] [cursor=pointer]
+  - region "塔防游戏" [ref=f1e26]:
+    - generic [ref=f1e27]:
+      - generic "等距塔防地图" [ref=f1e28]
+      - generic [ref=f1e30]:
+        - generic [ref=f1e31]: 红色 · 敌人入口
+        - generic [ref=f1e32]: 金色 · 基地
+        - generic [ref=f1e33]: 绿色圆环 · 建造位
+    - complementary "游戏控制" [ref=f1e34]:
+      - generic [ref=f1e35]:
+        - generic [ref=f1e36]:
+          - generic [ref=f1e37]: 基地生命
+          - strong [ref=f1e38]: 30 / 30
+        - generic [ref=f1e39]:
+          - generic [ref=f1e40]: 金币
+          - strong [ref=f1e41]: "500"
+        - generic [ref=f1e42]:
+          - generic [ref=f1e43]: 波次
+          - strong [ref=f1e44]: 0 / 6
+        - generic [ref=f1e45]:
+          - generic [ref=f1e46]: 防御塔
+          - strong [ref=f1e47]: "0"
+      - generic [ref=f1e48]:
+        - heading "部署防御" [level=2] [ref=f1e49]
+        - paragraph [ref=f1e50]: 选择塔型，再点击地图上的绿色建造位。
+        - generic [ref=f1e51]:
+          - button "弩塔 80 金币" [ref=f1e52] [cursor=pointer]:
+            - generic [ref=f1e54]: 弩塔
+            - generic [ref=f1e55]: 80 金币
+          - button "爆裂塔 120 金币" [ref=f1e56] [cursor=pointer]:
+            - generic [ref=f1e58]: 爆裂塔
+            - generic [ref=f1e59]: 120 金币
+          - button "霜缚塔 100 金币" [ref=f1e60] [cursor=pointer]:
+            - generic [ref=f1e62]: 霜缚塔
+            - generic [ref=f1e63]: 100 金币
+          - button "重炮塔 160 金币" [ref=f1e64] [cursor=pointer]:
+            - generic [ref=f1e66]: 重炮塔
+            - generic [ref=f1e67]: 160 金币
+        - button "点击地图上的防御塔以升级" [disabled] [ref=f1e68]
+      - generic [ref=f1e69]:
+        - heading "战场指挥" [level=2] [ref=f1e70]
+        - button "开始第一波" [ref=f1e71] [cursor=pointer]
+        - generic [ref=f1e72]:
+          - button "暂停" [disabled] [ref=f1e73]
+          - button "1× 速度" [ref=f1e74] [cursor=pointer]
+        - button "重新开始" [ref=f1e75] [cursor=pointer]
+      - paragraph [ref=f1e76]: 选择防御塔，再点击地图上的空心建造位。
+      - paragraph [ref=f1e77]: 提示：敌人会沿道路前进。塔会自动攻击射程内最接近基地的目标。空格键开始 / 暂停。

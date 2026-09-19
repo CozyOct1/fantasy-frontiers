@@ -1,0 +1,15 @@
+{
+  "name": "@fantasy-frontiers/core",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fantasy-frontiers/shared": "workspace:*"
+  }
+}

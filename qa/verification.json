@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 3,
+  "status": "PASS",
+  "verify": {
+    "command": "pnpm test:e2e",
+    "exitCode": 0,
+    "suites": [
+      "10 Playwright scenarios passed; production-only smoke skipped in the default suite",
+      "PRODUCTION_SMOKE=1 production subpath scenario passed separately",
+      "pnpm verify passed: typecheck, 44 Vitest tests, production build"
+    ]
+  },
+  "completeRun": {
+    "id": "easy-full-playthrough",
+    "cleanContext": true,
+    "terminal": "胜利 · 防线守住了",
+    "restart": "initial-state",
+    "evidence": "qa/evidence/run.json"
+  },
+  "checks": {
+    "launch": "PASS",
+    "render": "PASS",
+    "input": "PASS",
+    "coreLoop": "PASS",
+    "outcome": "PASS",
+    "restart": "PASS"
+  },
+  "limitations": [
+    { "scope": "physical mobile device", "reason": "Validated at 390x844 Chromium viewport; physical-device input, thermal and sustained performance were not available." },
+    { "scope": "bundle size", "reason": "Phaser application chunk is approximately 1.40 MB and still emits Vite's 500 KB chunk warning." }
+  ]
+}

@@ -1,0 +1,36 @@
+- main [ref=f3e2]:
+  - region "世界大厅" [ref=f3e3]:
+    - generic [ref=f3e5]:
+      - paragraph [ref=f3e6]: FANTASY FRONTIERS · V1 PLAYABLE SLICE
+      - heading "幻想防线" [level=1] [ref=f3e7]
+      - paragraph [ref=f3e8]: 选择世界与关卡，开始防守。
+    - region "我的世界" [ref=f3e9]:
+      - generic [ref=f3e10]:
+        - paragraph [ref=f3e11]: MY WORLDS · LOCAL SAVE
+        - heading "我的世界" [level=2] [ref=f3e12]
+      - button "创意工坊" [ref=f3e13] [cursor=pointer]
+      - article [ref=f3e15]:
+        - img "边境哨站幻想原野与堡垒插画" [ref=f3e16]
+        - generic [ref=f3e17]:
+          - strong [ref=f3e18]: 边境哨站
+          - generic [ref=f3e19]: 守住通往王国腹地的最后一道防线。 · ready
+        - generic [ref=f3e20]:
+          - generic [ref=f3e21]: EASY 可玩
+          - generic [ref=f3e22]: MEDIUM 可玩
+          - generic [ref=f3e23]: HARD 可玩
+        - generic [ref=f3e24]:
+          - button "当前世界" [ref=f3e25] [cursor=pointer]
+          - button "管理详情" [ref=f3e26] [cursor=pointer]
+    - region "创建主题世界" [ref=f3e27]:
+      - generic [ref=f3e28]:
+        - generic [ref=f3e29]: 创建一个新世界
+        - generic [ref=f3e30]:
+          - textbox "创建一个新世界" [ref=f3e31]:
+            - /placeholder: 例如：漂浮群岛上的星象守卫抵挡虚空生物
+          - button "生成世界" [ref=f3e32] [cursor=pointer]
+    - navigation "选择关卡难度" [ref=f3e33]:
+      - generic [ref=f3e34]: 边境战役
+      - button "Easy" [ref=f3e35] [cursor=pointer]
+      - button "Medium" [ref=f3e36] [cursor=pointer]
+      - button "Hard" [ref=f3e37] [cursor=pointer]
+      - button "开始关卡" [ref=f3e38] [cursor=pointer]

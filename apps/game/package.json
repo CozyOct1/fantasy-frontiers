@@ -1,0 +1,20 @@
+{
+  "name": "@fantasy-frontiers/game",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "pnpm typecheck && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fantasy-frontiers/core": "workspace:*",
+    "@fantasy-frontiers/maps": "workspace:*",
+    "@fantasy-frontiers/shared": "workspace:*",
+    "phaser": "3.90.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.0"
+  }
+}

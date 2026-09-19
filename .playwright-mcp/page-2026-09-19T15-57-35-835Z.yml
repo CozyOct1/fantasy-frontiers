@@ -1,0 +1,25 @@
+- main [ref=f16e2]:
+  - region "世界大厅" [ref=f16e3]:
+    - generic [ref=f16e5]:
+      - paragraph [ref=f16e6]: FANTASY FRONTIERS · V1 PLAYABLE SLICE
+      - heading "幻想防线" [level=1] [ref=f16e7]
+      - paragraph [ref=f16e8]: 选择世界与关卡，开始防守。
+    - region "我的世界" [ref=f16e9]:
+      - generic [ref=f16e10]:
+        - paragraph [ref=f16e11]: MY WORLDS · LOCAL SAVE
+        - heading "我的世界" [level=2] [ref=f16e12]
+      - button "创意工坊" [ref=f16e13] [cursor=pointer]
+      - generic [ref=f16e14]: 本地存档服务暂不可用；示例关卡仍可直接游玩。
+    - region "创建主题世界" [ref=f16e15]:
+      - generic [ref=f16e16]:
+        - generic [ref=f16e17]: 创建一个新世界
+        - generic [ref=f16e18]:
+          - textbox "创建一个新世界" [ref=f16e19]:
+            - /placeholder: 例如：漂浮群岛上的星象守卫抵挡虚空生物
+          - button "生成世界" [ref=f16e20] [cursor=pointer]
+    - navigation "选择关卡难度" [ref=f16e21]:
+      - generic [ref=f16e22]: 边境战役
+      - button "Easy" [ref=f16e23] [cursor=pointer]
+      - button "Medium" [ref=f16e24] [cursor=pointer]
+      - button "Hard" [ref=f16e25] [cursor=pointer]
+      - button "开始关卡" [ref=f16e26] [cursor=pointer]

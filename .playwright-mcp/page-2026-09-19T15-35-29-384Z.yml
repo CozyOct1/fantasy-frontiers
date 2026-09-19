@@ -1,0 +1,76 @@
+- main [ref=e2]:
+  - region "世界大厅" [ref=e3]:
+    - generic [ref=e5]:
+      - paragraph [ref=e6]: FANTASY FRONTIERS · V1 PLAYABLE SLICE
+      - heading "幻想防线" [level=1] [ref=e7]
+      - paragraph [ref=e8]: 选择世界与关卡，开始防守。
+    - region "我的世界" [ref=e9]:
+      - generic [ref=e10]:
+        - paragraph [ref=e11]: MY WORLDS · LOCAL SAVE
+        - heading "我的世界" [level=2] [ref=e12]
+      - button "创意工坊" [ref=e13] [cursor=pointer]
+      - article [ref=e15]:
+        - img "边境哨站幻想原野与堡垒插画" [ref=e16]
+        - generic [ref=e17]:
+          - strong [ref=e18]: 边境哨站
+          - generic [ref=e19]: 守住通往王国腹地的最后一道防线。 · ready
+        - generic [ref=e20]:
+          - generic [ref=e21]: EASY 可玩
+          - generic [ref=e22]: MEDIUM 可玩
+          - generic [ref=e23]: HARD 可玩
+        - generic [ref=e24]:
+          - button "当前世界" [ref=e25] [cursor=pointer]
+          - button "管理详情" [active] [ref=e26] [cursor=pointer]
+    - region "创建主题世界" [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e29]: 创建一个新世界
+        - generic [ref=e30]:
+          - textbox "创建一个新世界" [ref=e31]:
+            - /placeholder: 例如：漂浮群岛上的星象守卫抵挡虚空生物
+          - button "生成世界" [ref=e32] [cursor=pointer]
+    - region "世界详情" [ref=e39]:
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - paragraph [ref=e42]: WORLD MANAGEMENT
+          - heading "边境哨站" [level=2] [ref=e43]
+        - button "收起" [ref=e44] [cursor=pointer]
+      - paragraph [ref=e45]: 守住通往王国腹地的最后一道防线。 · 状态：ready
+      - generic [ref=e46]:
+        - article [ref=e47]:
+          - generic [ref=e48]:
+            - strong [ref=e49]: 边境哨站 · EASY
+            - paragraph [ref=e50]: 守住防线，迎接下一场考验。
+          - button "试玩关卡" [ref=e51] [cursor=pointer]
+        - article [ref=e52]:
+          - generic [ref=e53]:
+            - strong [ref=e54]: 边境哨站 · MEDIUM
+            - paragraph [ref=e55]: 守住防线，迎接下一场考验。
+          - button "试玩关卡" [ref=e56] [cursor=pointer]
+        - article [ref=e57]:
+          - generic [ref=e58]:
+            - strong [ref=e59]: 边境哨站 · HARD
+            - paragraph [ref=e60]: 守住防线，迎接下一场考验。
+          - button "试玩关卡" [ref=e61] [cursor=pointer]
+      - generic [ref=e62]:
+        - button "开始评测" [ref=e63] [cursor=pointer]
+        - button "发布到创意工坊" [disabled] [ref=e64]
+        - status [ref=e65]: 发布条件：all_levels_need_evaluation_reports
+      - generic [ref=e66]:
+        - article [ref=e67]:
+          - heading "Easy · 评测报告" [level=3] [ref=e68]
+          - paragraph [ref=e69]: 尚无评测报告。
+          - list
+        - article [ref=e70]:
+          - heading "Medium · 评测报告" [level=3] [ref=e71]
+          - paragraph [ref=e72]: 尚无评测报告。
+          - list
+        - article [ref=e73]:
+          - heading "Hard · 评测报告" [level=3] [ref=e74]
+          - paragraph [ref=e75]: 尚无评测报告。
+          - list
+    - navigation "选择关卡难度" [ref=e33]:
+      - generic [ref=e34]: 边境战役
+      - button "Easy" [ref=e35] [cursor=pointer]
+      - button "Medium" [ref=e36] [cursor=pointer]
+      - button "Hard" [ref=e37] [cursor=pointer]
+      - button "开始关卡" [ref=e38] [cursor=pointer]
