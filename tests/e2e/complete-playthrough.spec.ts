@@ -44,7 +44,7 @@ test("complete an Easy campaign run, persist its outcome, reload progress, and r
     };
   });
   const sum = map.width + map.height;
-  const tileWidth = 52 * Math.min((viewport.width - 32) / (sum * 26), (viewport.height - insets.top - insets.bottom) / (sum * 16)) * 1.22;
+  const tileWidth = 52 * Math.min((viewport.width - 32) / (sum * 26), (viewport.height - insets.top - insets.bottom) / (sum * 16));
   const tileHeight = tileWidth * 32 / 52;
   const anchorX = 16 + (viewport.width - 32) / 2 - ((map.width - map.height) * tileWidth) / 4;
   const anchorY = insets.top + (viewport.height - insets.top - insets.bottom) / 2 - ((sum - 2) * tileHeight) / 4;

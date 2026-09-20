@@ -8,9 +8,16 @@ import { createGameplayController, type GameplayController } from "./game/gamepl
 import { resolveWorldSkin } from "./presentation/world-skin-resolver";
 import { getLocalGameAssetKey, getLocalGameAssetUrl, getPresentationAssets } from "./presentation/local-game-assets";
 import { createDecorationPlacements } from "./presentation/deterministic-decoration";
+import { createRoadConnectionMap, ROAD_DIRECTION_OFFSETS } from "./presentation/road-renderer";
+import { ENEMY_WORLD_ASSET_BY_ARCHETYPE, TOWER_WORLD_ASSET_BY_ARCHETYPE, resolveWorldAssets, type ResolvedWorldAssets, type WorldAssetName } from "./presentation/world-asset-registry";
+import { WORLD_VISUAL_DEPTH } from "./presentation/world-asset-render-config";
+import { footprintDiamond, getIsometricPlacement, placeIsometricSprite, type IsometricPlacement } from "./presentation/isometric-render-contract";
+import { mountAssetCalibrationPage } from "./presentation/asset-calibration-scene";
 import "./style.css";
 
 const difficultySeeds: Record<Difficulty, number> = { easy: 70421, medium: 70422, hard: 70423 };
+const debugRenderMode = new URLSearchParams(window.location.search).get("debugRender") === "1";
+const assetCalibrationMode = window.location.pathname.endsWith("/dev/assets") || new URLSearchParams(window.location.search).get("assetCalibration") === "1";
 const difficultyNames: Record<Difficulty, string> = { easy: "Easy", medium: "Medium", hard: "Hard" };
 const defaultTowerNames: Record<TowerArchetype, string> = { basic: "弩塔", aoe: "爆裂塔", slow: "霜缚塔", heavy: "重炮塔" };
 function createDemoMap(difficulty: Difficulty): MapSpec {
@@ -41,6 +48,7 @@ let activeRunId: string | null = null;
 let resultRunId: string | null = null;
 let presentedResultKey: string | null = null;
 let currentSkin = resolveWorldSkin("fantasy");
+let currentWorldAssets = resolveWorldAssets(currentWorldId);
 const apiBase = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? "/fantasy-frontiers" : "http://127.0.0.1:3001");
 let game: Phaser.Game | undefined;
 const screenFlow = new ScreenFlow((screen: AppScreen) => {
@@ -123,6 +131,79 @@ let unlockedLevelIds = new Set<string>();
 let feedbackSequence = 0;
 const pollingJobs = new Set<string>();
 const pollingEvaluations = new Set<string>();
+type HubView = "menu" | "play" | "studio" | "generate" | "evaluation" | "settings";
+let currentHubView: HubView = "menu";
+let selectedEvaluationWorldId: string | null = null;
+
+function showHubView(view: HubView): void {
+  currentHubView = view;
+  screenFlow.show("hub");
+  document.querySelectorAll<HTMLElement>("[data-hub-view]").forEach(element => {
+    const active = element.dataset.hubView === view;
+    element.hidden = !active;
+    element.setAttribute("aria-hidden", String(!active));
+  });
+  if (view === "play") {
+    ui.detail.hidden = true;
+    ui.worldList.hidden = false;
+  }
+  if (view === "evaluation") renderEvaluationWorlds();
+  if (view === "generate") renderCreatorWorlds();
+}
+
+function renderCreatorWorlds(): void {
+  const list = document.querySelector<HTMLElement>("#generation-world-list")!;
+  list.replaceChildren();
+  const heading = document.createElement("h3"); heading.textContent = "已有世界"; list.append(heading);
+  for (const world of knownWorlds.values()) {
+    const row = document.createElement("article"); row.className = "creator-world-row";
+    const copy = document.createElement("div");
+    const title = document.createElement("strong"); title.textContent = world.spec.name;
+    const status = document.createElement("small"); status.textContent = `${world.spec.status} · ${world.levels.length}/3 关`;
+    copy.append(title, status); row.append(copy); list.append(row);
+  }
+}
+
+function renderEvaluationWorlds(): void {
+  const list = document.querySelector<HTMLElement>("#evaluation-world-list")!;
+  list.replaceChildren();
+  for (const world of knownWorlds.values()) {
+    const button = document.createElement("button"); button.className = "evaluation-world-card"; button.type = "button";
+    const assets = resolveWorldAssets(world.skin?.assetWorldId ?? world.spec.id);
+    const image = document.createElement("img"); image.src = assets.worldKeyArtUrl; image.alt = "";
+    const copy = document.createElement("span");
+    const title = document.createElement("strong"); title.textContent = world.spec.name;
+    const summary = document.createElement("small"); summary.textContent = world.evaluations.length ? `已有 ${world.evaluations.length} 条实验记录` : "尚未评测";
+    copy.append(title, summary); button.append(image, copy);
+    button.addEventListener("click", () => renderEvaluationDetail(world.spec.id)); list.append(button);
+  }
+}
+
+function renderEvaluationDetail(worldId: string): void {
+  const known = knownWorlds.get(worldId); if (!known) return;
+  selectedEvaluationWorldId = worldId;
+  const panel = document.querySelector<HTMLElement>("#evaluation-detail")!; panel.hidden = false;
+  document.querySelector<HTMLElement>("#evaluation-title")!.textContent = `${known.spec.name} · 评测`;
+  const running = known.evaluations.some(record => record.status === "queued" || record.status === "running");
+  const start = document.querySelector<HTMLButtonElement>("#evaluation-start")!;
+  start.disabled = running; start.textContent = running ? "评测进行中…" : known.evaluations.length ? "重新评测" : "开始评测";
+  const download = document.querySelector<HTMLAnchorElement>("#evaluation-download")!;
+  download.hidden = !known.evaluations.some(record => record.status === "completed" && record.report);
+  download.href = `${apiBase}/api/worlds/${encodeURIComponent(worldId)}/evaluation-report.md`;
+  document.querySelector<HTMLElement>("#evaluation-status")!.textContent = "评测将运行 Easy、Medium、Hard，并保留 Simulator 实验 Trace 与指标报告。";
+  const reports = document.querySelector<HTMLElement>("#evaluation-report-list")!; reports.replaceChildren();
+  const latestByLevel = new Map<string, ListedEvaluation>();
+  for (const evaluation of [...known.evaluations].sort((a, b) => a.createdAt.localeCompare(b.createdAt))) latestByLevel.set(evaluation.levelId, evaluation);
+  for (const difficulty of ["easy", "medium", "hard"] as const) {
+    const level = known.levels.find(item => item.difficulty === difficulty); if (!level) continue;
+    const evaluation = latestByLevel.get(level.id); const card = document.createElement("article"); card.className = "evaluation-report";
+    const title = document.createElement("h3"); title.textContent = `${difficultyNames[difficulty]} · ${level.name}`;
+    const copy = document.createElement("p"); copy.textContent = evaluation?.report
+      ? `${evaluation.report.summary} 胜率 ${(evaluation.report.metrics.winRate * 100).toFixed(0)}% · ${evaluation.report.runIds.length} 次运行`
+      : evaluation ? `评测${evaluation.status}${evaluation.error ? `：${evaluation.error}` : ""}` : "尚无评测报告。";
+    card.append(title, copy); reports.append(card);
+  }
+}
 
 async function beginPersistentRun(): Promise<void> {
   activeRunId = null;
@@ -183,8 +264,10 @@ async function refreshWorldLibrary(): Promise<void> {
       const { world, detail } = entry;
       knownWorlds.set(world.id, { spec: world, levels: detail.levels, evaluations: detail.evaluations ?? [], readiness: detail.readiness ?? null, ...(detail.skin ? { skin: detail.skin } : {}), ...(detail.towerTheme ? { towerTheme: detail.towerTheme } : {}), ...(detail.enemyTheme ? { enemyTheme: detail.enemyTheme } : {}) });
       const card = document.createElement("article"); card.className = "world-card";
-      const thumbnail = document.createElement("img"); thumbnail.className = "world-thumbnail"; thumbnail.alt = "边境哨站幻想原野与堡垒插画";
-      thumbnail.src = getLocalGameAssetUrl(world.themeFamily === "fantasy" ? "ff.border-outpost.world-border-outpost" : "ff.neutral.background") ?? "";
+      const thumbnail = document.createElement("img"); thumbnail.className = "world-thumbnail"; thumbnail.alt = `${world.name}世界封面`;
+      const worldAssets = resolveWorldAssets(detail.skin?.assetWorldId ?? world.id);
+      thumbnail.src = worldAssets.worldKeyArtUrl;
+      thumbnail.style.objectPosition = `${worldAssets.manifest.keyArt.focalX * 100}% ${worldAssets.manifest.keyArt.focalY * 100}%`;
       const copy = document.createElement("div");
       const title = document.createElement("strong"); title.textContent = world.name;
       const summary = document.createElement("span"); summary.textContent = `${world.summary} · ${world.status}`;
@@ -200,13 +283,15 @@ async function refreshWorldLibrary(): Promise<void> {
       const select = document.createElement("button"); select.className = "world-select"; select.type = "button"; select.textContent = world.id === currentWorldId ? "使用中" : "进入";
       select.disabled = world.status !== "ready" && world.status !== "generated" && world.status !== "published";
       select.addEventListener("click", () => void prepareWorld(world.id).then(ready => { if (ready) renderWorldDetail(world.id); }));
-      const detailButton = document.createElement("button"); detailButton.className = "world-select"; detailButton.type = "button"; detailButton.textContent = "详情"; detailButton.setAttribute("aria-label", "管理详情");
-      detailButton.addEventListener("click", () => renderWorldDetail(world.id));
+      const detailButton = document.createElement("button"); detailButton.className = "world-select"; detailButton.type = "button"; detailButton.textContent = "选择关卡";
+      detailButton.addEventListener("click", () => void prepareWorld(world.id).then(ready => { if (ready) renderWorldDetail(world.id); }));
       const actions = document.createElement("div"); actions.className = "world-card-actions"; actions.append(select, detailButton);
       card.append(thumbnail, copy, levels, actions); ui.worldList.append(card);
     }
     renderWorkshop(workshopData.worlds);
     renderGenerationJobs(jobs);
+    renderCreatorWorlds();
+    renderEvaluationWorlds();
     for (const job of jobs) if ((job.status === "queued" || job.status === "running") && !pollingJobs.has(job.id)) void pollGeneration(job.id, job.worldId);
     for (const world of worlds) if (knownWorlds.get(world.id)?.evaluations.some(evaluation => evaluation.status === "queued" || evaluation.status === "running") && !pollingEvaluations.has(world.id)) void pollEvaluations(world.id);
     document.querySelectorAll<HTMLButtonElement>("[data-difficulty]").forEach(button => {
@@ -232,11 +317,14 @@ function renderWorkshop(worlds: WorldSpec[]): void {
   }
   for (const world of worlds) {
     const card = document.createElement("article"); card.className = "workshop-card";
+    const cover = document.createElement("img"); cover.className = "workshop-cover"; cover.alt = `${world.name}世界封面`;
+    const worldAssets = resolveWorldAssets(world.id); cover.src = worldAssets.worldKeyArtUrl;
+    cover.style.objectPosition = `${worldAssets.manifest.keyArt.focalX * 100}% ${worldAssets.manifest.keyArt.focalY * 100}%`;
     const title = document.createElement("strong"); title.textContent = world.name;
     const summary = document.createElement("p"); summary.textContent = world.summary;
     const enter = document.createElement("button"); enter.className = "world-select"; enter.type = "button"; enter.textContent = "查看并游玩";
     enter.addEventListener("click", () => void enterWorkshopWorld(world.id));
-    card.append(title, summary, enter); ui.workshopList.append(card);
+    card.append(cover, title, summary, enter); ui.workshopList.append(card);
   }
 }
 
@@ -244,8 +332,12 @@ function renderWorldDetail(worldId: string): void {
   const known = knownWorlds.get(worldId);
   if (!known) return;
   ui.detail.hidden = false;
+  ui.worldList.hidden = true;
   ui.detailTitle.dataset.worldId = worldId;
   ui.detailTitle.textContent = known.spec.name;
+  const worldAssets = resolveWorldAssets(known.skin?.assetWorldId ?? worldId);
+  ui.detail.style.setProperty("--world-key-art", `url(${JSON.stringify(worldAssets.worldKeyArtUrl)})`);
+  ui.detail.style.setProperty("--world-key-position", `${worldAssets.manifest.keyArt.focalX * 100}% ${worldAssets.manifest.keyArt.focalY * 100}%`);
   ui.detailSummary.textContent = `${known.spec.summary} · 状态：${known.spec.status}`;
   ui.detailLevels.replaceChildren();
   for (const difficulty of ["easy", "medium", "hard"] as const) {
@@ -255,7 +347,7 @@ function renderWorldDetail(worldId: string): void {
     const title = document.createElement("strong"); title.textContent = level?.name ?? `${difficultyNames[difficulty]} · 缺少关卡`;
     const description = document.createElement("p"); description.textContent = level?.story || "地图和战役主题已保存在本地。";
     copy.append(title, description);
-    const play = document.createElement("button"); play.className = "world-select"; play.type = "button"; play.textContent = "试玩关卡"; play.disabled = !level;
+    const play = document.createElement("button"); play.className = "world-select"; play.type = "button"; play.textContent = "开始挑战"; play.disabled = !level;
     if (level) play.addEventListener("click", () => { void enterGameplay(worldId, difficulty); });
     row.append(copy, play); ui.detailLevels.append(row);
   }
@@ -304,15 +396,8 @@ function setWorkshopVisible(visible: boolean): void {
 }
 
 function returnToSelection(target: "world" | "levels"): void {
-  setWorkshopVisible(false);
-  screenFlow.show("hub");
-  if (target === "levels") {
-    ui.detail.hidden = true;
-    document.querySelector<HTMLElement>(".difficulty-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    return;
-  }
-  renderWorldDetail(currentWorldId);
-  ui.detail.scrollIntoView({ behavior: "smooth", block: "start" });
+  showHubView("play");
+  if (target === "world") renderWorldDetail(currentWorldId);
 }
 
 async function prepareWorld(worldId: string, difficulty = currentDifficulty): Promise<boolean> {
@@ -349,6 +434,8 @@ async function prepareWorld(worldId: string, difficulty = currentDifficulty): Pr
     if (text) text.textContent = name;
   });
   currentSkin = resolveWorldSkin(world.spec.themeFamily, world.skin);
+  currentWorldAssets = resolveWorldAssets(world.skin?.assetWorldId ?? worldId);
+  document.documentElement.style.setProperty("--battle-backdrop", `url(${JSON.stringify(currentWorldAssets.battleBackdropUrl)})`);
   document.documentElement.dataset.themeFamily = world.spec.themeFamily;
   document.documentElement.dataset.themePack = currentSkin.packId;
   document.documentElement.style.setProperty("--theme-primary", currentSkin.skin.colors.primary);
@@ -413,18 +500,18 @@ async function retryGeneration(jobId: string, worldId: string): Promise<void> {
 }
 
 async function evaluateWorld(worldId: string): Promise<void> {
-  ui.evaluate.disabled = true;
-  ui.evaluate.textContent = "正在排队…";
+  const evaluationStart = document.querySelector<HTMLButtonElement>("#evaluation-start");
+  if (evaluationStart) { evaluationStart.disabled = true; evaluationStart.textContent = "正在排队…"; }
   try {
     const response = await fetch(`${apiBase}/api/worlds/${encodeURIComponent(worldId)}/evaluate`, { method: "POST" });
     const body = await response.json() as { error?: string };
     if (!response.ok) throw new Error(body.error ?? `API ${response.status}`);
     await refreshWorldLibrary();
-    renderWorldDetail(worldId);
+    renderEvaluationDetail(worldId);
     void pollEvaluations(worldId);
   } catch (error) {
-    ui.publishStatus.textContent = `无法启动评测：${error instanceof Error ? error.message : "服务异常"}`;
-    ui.evaluate.disabled = false;
+    document.querySelector<HTMLElement>("#evaluation-status")!.textContent = `无法启动评测：${error instanceof Error ? error.message : "服务异常"}`;
+    if (evaluationStart) evaluationStart.disabled = false;
   }
 }
 
@@ -440,7 +527,7 @@ async function pollEvaluations(worldId: string): Promise<void> {
       const detail = await response.json() as { evaluations?: ListedEvaluation[] };
       running = (detail.evaluations ?? []).some(evaluation => evaluation.status === "queued" || evaluation.status === "running");
       await refreshWorldLibrary();
-      if (ui.detailTitle.dataset.worldId === worldId) renderWorldDetail(worldId);
+      if (selectedEvaluationWorldId === worldId && currentHubView === "evaluation") renderEvaluationDetail(worldId);
     }
   } finally { pollingEvaluations.delete(worldId); }
 }
@@ -504,6 +591,7 @@ function consumeBattleEvents(events: readonly GameEvent[]): void {
     else if (event.type === "statusChanged" && event.status === "running") {
       ui.waveBanner.textContent = `第 ${engine.state.waveIndex} 波来袭`;
       ui.waveBanner.hidden = false;
+      boardScene?.showWaveStartEffect();
       window.setTimeout(() => { ui.waveBanner.hidden = true; }, 1900);
     }
   }
@@ -558,6 +646,7 @@ function renderHud(): void {
     }
   }
   ui.status.textContent = ({ ready: "部署阶段", running: "战斗进行中", paused: "已暂停", won: "防线守住了", lost: "基地失守" })[state.status];
+  ui.status.classList.toggle("running", state.status === "running");
   ui.hp.textContent = `${state.hp} / ${state.maxHp}`;
   ui.gold.textContent = `${state.gold}`;
   ui.wave.textContent = `${state.waveIndex} / ${state.totalWaves}`;
@@ -609,7 +698,9 @@ function renderHud(): void {
 }
 
 class BoardScene extends Phaser.Scene {
+  private backdropSprite: Phaser.GameObjects.Image | null = null;
   private terrain!: Phaser.GameObjects.Graphics;
+  private roads!: Phaser.GameObjects.Graphics;
   private dynamic!: Phaser.GameObjects.Graphics;
   private shots!: Phaser.GameObjects.Graphics;
   private shotEvents: Extract<GameEvent, { type: "towerFired" }>[] = [];
@@ -625,13 +716,14 @@ class BoardScene extends Phaser.Scene {
   private riftSprites: Phaser.GameObjects.Image[] = [];
   private baseSprite: Phaser.GameObjects.Image | null = null;
   private sceneClock = 0;
+  private debugGraphics: Phaser.GameObjects.Graphics | null = null;
+  private debugLabels: Phaser.GameObjects.Text[] = [];
 
   constructor() { super("board"); }
 
   preload(): void {
     const pack = getPresentationAssets(currentSkin.packId);
-    if (!pack) return;
-    const ids = [...pack.terrainTileIds, pack.pathTileId, pack.buildSlotId, pack.spawnId, pack.baseId, ...Object.values(pack.towerIds), ...Object.values(pack.enemyIds), ...pack.decorationIds];
+    const ids = pack?.terrainTileIds ?? [];
     for (const id of ids) {
       const url = getLocalGameAssetUrl(id);
       const key = getLocalGameAssetKey(id);
@@ -646,9 +738,12 @@ class BoardScene extends Phaser.Scene {
   create(): void {
     boardScene = this;
     this.cameras.main.setBackgroundColor("rgba(16,26,26,0)");
-    this.terrain = this.add.graphics();
-    this.dynamic = this.add.graphics().setDepth(5000);
-    this.shots = this.add.graphics().setDepth(6000);
+    this.terrain = this.add.graphics().setDepth(WORLD_VISUAL_DEPTH.ground);
+    this.roads = this.add.graphics().setDepth(WORLD_VISUAL_DEPTH.road);
+    this.dynamic = this.add.graphics().setDepth(WORLD_VISUAL_DEPTH.indicator);
+    this.shots = this.add.graphics().setDepth(WORLD_VISUAL_DEPTH.projectile);
+    if (debugRenderMode) this.debugGraphics = this.add.graphics().setDepth(WORLD_VISUAL_DEPTH.debug);
+    this.syncBackdrop();
     this.layoutBoard();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.layoutBoard, this);
     this.drawTerrain();
@@ -661,6 +756,10 @@ class BoardScene extends Phaser.Scene {
     });
     this.renderState();
     renderHud();
+    // World packs can be several megabytes over a public connection. Do not
+    // block Scene creation on them: render the deterministic fallback board
+    // first, then replace its visuals once the themed pack has finished.
+    this.loadWorldTextures(currentWorldAssets);
   }
 
   update(time: number, delta: number): void {
@@ -690,6 +789,32 @@ class BoardScene extends Phaser.Scene {
     this.drawPathDirection();
     this.drawInteractionHighlight();
     this.drawShots();
+    if (debugRenderMode) this.drawDebugRenderMode();
+  }
+
+  private drawDebugRenderMode(): void {
+    if (!this.debugGraphics) return;
+    this.debugGraphics.clear();
+    for (const label of this.debugLabels) label.destroy();
+    this.debugLabels = [];
+    for (let y = 0; y < currentMap.height; y++) for (let x = 0; x < currentMap.width; x++) {
+      const center = this.project({ x, y });
+      this.debugGraphics.fillStyle(0x51dcff, .75).fillCircle(center.x, center.y, 2);
+      this.debugLabels.push(this.add.text(center.x + 3, center.y + 2, `${x},${y}`, { color: "#8cecff", fontSize: "8px", backgroundColor: "#00151aaa" }).setDepth(WORLD_VISUAL_DEPTH.debug));
+    }
+    const sprites = [...this.terrainSprites, ...this.entitySprites.values()];
+    for (const sprite of sprites) {
+      const placement = sprite.getData("isometricPlacement") as IsometricPlacement | undefined;
+      if (!placement) continue;
+      const bounds = sprite.getBounds();
+      this.debugGraphics.lineStyle(1, 0xff5b79, .9).strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+      this.debugGraphics.fillStyle(0xffed67, 1).fillCircle(placement.screenX, placement.groundScreenY, 3);
+      const footprint = footprintDiamond(this.projection, { x: placement.worldX, y: placement.worldY }, placement.metadata);
+      this.debugGraphics.lineStyle(1, 0x6dff9a, .9).beginPath().moveTo(footprint[0]!.x, footprint[0]!.y);
+      for (const vertex of footprint.slice(1)) this.debugGraphics.lineTo(vertex.x, vertex.y);
+      this.debugGraphics.closePath().strokePath();
+      this.debugLabels.push(this.add.text(bounds.x, bounds.y - 12, `${placement.asset} s${placement.metadata.scale} o${placement.metadata.originX},${placement.metadata.originY}\ny${placement.groundScreenY.toFixed(1)} d${placement.depth.toFixed(1)}`, { color: "#fff3b0", fontSize: "8px", backgroundColor: "#111c" }).setDepth(WORLD_VISUAL_DEPTH.debug));
+    }
   }
 
   private drawPathDirection(): void {
@@ -709,9 +834,51 @@ class BoardScene extends Phaser.Scene {
   }
 
   changeMap(): void {
+    this.loadWorldTextures(currentWorldAssets);
+  }
+
+  private loadWorldTextures(assets: ResolvedWorldAssets): void {
+    if (!this.queueWorldTextures(assets)) {
+      this.refreshWorldVisuals();
+      return;
+    }
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => this.refreshWorldVisuals());
+    this.load.start();
+  }
+
+  private refreshWorldVisuals(): void {
+    this.syncBackdrop();
     this.layoutBoard();
     this.drawTerrain();
     this.renderState();
+  }
+
+  private queueWorldTextures(assets: ResolvedWorldAssets): boolean {
+    let queued = false;
+    const entries: [string, string][] = [[`world-${assets.resolvedWorldId}-battleBackdrop`, assets.battleBackdropUrl]];
+    for (const name of Object.keys(assets.manifest.assets) as WorldAssetName[]) {
+      if (name.startsWith("road")) continue;
+      entries.push([assets.textureKey(name), assets.assetUrl(name)]);
+    }
+    for (const [key, url] of entries) {
+      if (this.textures.exists(key)) continue;
+      this.load.image(key, url);
+      queued = true;
+    }
+    return queued;
+  }
+
+  private syncBackdrop(): void {
+    const key = `world-${currentWorldAssets.resolvedWorldId}-battleBackdrop`;
+    if (!this.textures.exists(key)) return;
+    if (!this.backdropSprite) this.backdropSprite = this.add.image(this.scale.width / 2, this.scale.height / 2, key).setDepth(WORLD_VISUAL_DEPTH.backdrop).setScrollFactor(0);
+    else this.backdropSprite.setTexture(key);
+    const source = this.textures.get(key).getSourceImage() as { width: number; height: number };
+    const scale = Math.max(this.scale.width / source.width, this.scale.height / source.height);
+    this.backdropSprite.setPosition(this.scale.width / 2, this.scale.height / 2)
+      .setDisplaySize(source.width * scale, source.height * scale)
+      .setTint(this.color(currentWorldAssets.manifest.battlefieldPalette.ambientTint))
+      .setAlpha(.72);
   }
 
   positionTowerContext(point: Coordinate): void {
@@ -755,9 +922,14 @@ class BoardScene extends Phaser.Scene {
     this.tweens.add({ targets: rewardText, y: center.y - 38, alpha: 0, duration: 720, ease: "Cubic.Out", onComplete: () => rewardText.destroy() });
   }
 
-  showHitEffect(point: Coordinate): void {
+  showHitEffect(point: Coordinate, targetId?: string): void {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const center = this.project(point);
+    const target = targetId ? this.entitySprites.get(targetId) : undefined;
+    if (target) {
+      target.setTintFill(0xffffff);
+      window.setTimeout(() => { if (target.active) target.clearTint(); }, 85);
+    }
     const flash = this.add.ellipse(center.x, center.y - 5, 13, 10, 0xffefd0, 0.72);
     this.tweens.add({ targets: flash, scaleX: 0.35, scaleY: 0.35, alpha: 0, duration: 105, onComplete: () => flash.destroy() });
   }
@@ -766,10 +938,19 @@ class BoardScene extends Phaser.Scene {
     if (this.activeProjectileCount >= this.maxProjectileCount) return;
     this.activeProjectileCount += 1;
     const from = this.project(event.position); const to = this.project(event.targetPosition);
-    const muzzle = this.add.circle(from.x, from.y - 22, event.archetype === "heavy" ? 7 : 5, 0xffedb0, .95).setDepth(7000);
+    const muzzle = this.add.circle(from.x, from.y - 22, event.archetype === "heavy" ? 7 : 5, 0xffedb0, .95).setDepth(WORLD_VISUAL_DEPTH.indicator);
     this.tweens.add({ targets: muzzle, scale: 1.8, alpha: 0, duration: 90, onComplete: () => muzzle.destroy() });
-    const bolt = this.add.circle(from.x, from.y - 22, event.archetype === "heavy" ? 4 : 2.7, event.archetype === "slow" ? 0xa7e6dc : 0xffd47d, 1).setDepth(30);
-    this.tweens.add({ targets: bolt, x: to.x, y: to.y - 10, duration: 100, ease: "Linear", onComplete: () => { bolt.destroy(); this.activeProjectileCount = Math.max(0, this.activeProjectileCount - 1); this.showHitEffect(event.targetPosition); } });
+    const bolt = this.add.circle(from.x, from.y - 22, event.archetype === "heavy" ? 4 : 2.7, event.archetype === "slow" ? 0xa7e6dc : 0xffd47d, 1).setDepth(WORLD_VISUAL_DEPTH.projectile);
+    this.tweens.add({ targets: bolt, x: to.x, y: to.y - 10, duration: 100, ease: "Linear", onComplete: () => { bolt.destroy(); this.activeProjectileCount = Math.max(0, this.activeProjectileCount - 1); this.showHitEffect(event.targetPosition, event.targetId); } });
+  }
+
+  showWaveStartEffect(): void {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    for (const spawn of currentMap.spawns) {
+      const center = this.project(spawn.position);
+      const ring = this.add.ellipse(center.x, center.y, this.projection.tileWidth * .42, this.projection.tileHeight * .34, 0xc250d8, .58).setDepth(WORLD_VISUAL_DEPTH.indicator);
+      this.tweens.add({ targets: ring, scaleX: 2.1, scaleY: 2.1, alpha: 0, duration: 680, ease: "Cubic.Out", onComplete: () => ring.destroy() });
+    }
   }
 
   showBaseHitEffect(): void {
@@ -794,9 +975,15 @@ class BoardScene extends Phaser.Scene {
       rift.setScale(baseScaleX * pulse, baseScaleY * pulse);
       rift.setAlpha(.93 + Math.sin(time / 360) * .07);
     }
+    for (const sprite of this.terrainSprites) {
+      if (!sprite.getData("buildSlotPulse")) continue;
+      const baseAlpha = Number(sprite.getData("buildSlotBaseAlpha") ?? .9);
+      sprite.setAlpha(baseAlpha - .08 + (Math.sin(time / 430) + 1) * .04);
+    }
   }
 
   private layoutBoard(): void {
+    this.syncBackdrop();
     const stage = document.querySelector<HTMLElement>("#game-root")?.getBoundingClientRect();
     const header = document.querySelector<HTMLElement>(".gameplay-header")?.getBoundingClientRect();
     const controls = document.querySelector<HTMLElement>(".control-panel")?.getBoundingClientRect();
@@ -807,7 +994,7 @@ class BoardScene extends Phaser.Scene {
       right: 16,
       bottom: Math.max(12, controls ? height - (controls.top - stageTop) + 4 : 68),
       left: 16,
-    }, 1.22);
+    });
   }
 
   private project(point: Coordinate): Phaser.Math.Vector2 {
@@ -831,88 +1018,107 @@ class BoardScene extends Phaser.Scene {
 
   drawTerrain(): void {
     this.terrain.clear();
+    this.roads.clear();
     for (const sprite of this.terrainSprites) sprite.destroy();
     this.terrainSprites = [];
     this.riftSprites = [];
     this.baseSprite = null;
     const roadCells = new Set(currentMap.paths.flatMap(path => path.tiles.map(point => `${point.x},${point.y}`)));
+    const roadConnections = createRoadConnectionMap(currentMap);
     const slots = new Set(currentMap.buildSlots.map(point => `${point.x},${point.y}`));
     const spawns = new Set(currentMap.spawns.map(spawn => `${spawn.position.x},${spawn.position.y}`));
-    const pack = getPresentationAssets(currentSkin.packId);
-    const terrainIds = pack?.terrainTileIds ?? ["ff.neutral.tile"];
-    const roadKey = pack ? getLocalGameAssetKey(pack.pathTileId) : undefined;
-    if (pack) {
-      const top = this.project({ x: 0, y: 0 }); const right = this.project({ x: currentMap.width - 1, y: 0 });
-      const bottom = this.project({ x: currentMap.width - 1, y: currentMap.height - 1 }); const left = this.project({ x: 0, y: currentMap.height - 1 });
-      this.terrain.fillStyle(0x6d8956, 1);
-      this.terrain.beginPath();
-      this.terrain.moveTo(top.x, top.y - this.projection.tileHeight / 2);
-      this.terrain.lineTo(right.x + this.projection.tileWidth / 2, right.y);
-      this.terrain.lineTo(bottom.x, bottom.y + this.projection.tileHeight / 2);
-      this.terrain.lineTo(left.x - this.projection.tileWidth / 2, left.y);
-      this.terrain.closePath(); this.terrain.fillPath();
-    }
+    const render = currentWorldAssets.manifest.render;
+    const palette = currentWorldAssets.manifest.battlefieldPalette;
+    const top = this.project({ x: 0, y: 0 }); const right = this.project({ x: currentMap.width - 1, y: 0 });
+    const bottom = this.project({ x: currentMap.width - 1, y: currentMap.height - 1 }); const left = this.project({ x: 0, y: currentMap.height - 1 });
+    const topEdge = { x: top.x, y: top.y - this.projection.tileHeight / 2 };
+    const rightEdge = { x: right.x + this.projection.tileWidth / 2, y: right.y };
+    const bottomEdge = { x: bottom.x, y: bottom.y + this.projection.tileHeight / 2 };
+    const leftEdge = { x: left.x - this.projection.tileWidth / 2, y: left.y };
+    const cliffHeight = Math.max(12, this.projection.tileHeight * .55);
+    this.terrain.fillStyle(0x07100c, .42).fillEllipse((leftEdge.x + rightEdge.x) / 2, bottomEdge.y + cliffHeight, rightEdge.x - leftEdge.x, this.projection.tileHeight * 2.2);
+    this.terrain.fillStyle(this.color(palette.cliff), 1).beginPath().moveTo(leftEdge.x, leftEdge.y).lineTo(bottomEdge.x, bottomEdge.y).lineTo(rightEdge.x, rightEdge.y)
+      .lineTo(rightEdge.x, rightEdge.y + cliffHeight * .65).lineTo(bottomEdge.x, bottomEdge.y + cliffHeight).lineTo(leftEdge.x, leftEdge.y + cliffHeight * .65).closePath().fillPath();
+    this.terrain.fillStyle(this.color(palette.groundPrimary), 1).beginPath().moveTo(topEdge.x, topEdge.y).lineTo(rightEdge.x, rightEdge.y).lineTo(bottomEdge.x, bottomEdge.y).lineTo(leftEdge.x, leftEdge.y).closePath().fillPath();
+    this.terrain.lineStyle(2, this.color(palette.groundSecondary), .48).beginPath().moveTo(leftEdge.x, leftEdge.y).lineTo(bottomEdge.x, bottomEdge.y).lineTo(rightEdge.x, rightEdge.y).strokePath();
     for (let y = 0; y < currentMap.height; y++) {
       for (let x = 0; x < currentMap.width; x++) {
         const point = { x, y };
         const key = `${x},${y}`;
         const center = this.project(point);
-        const chosenTerrainId = terrainIds[(x * 7 + y * 11 + currentMap.seed) % terrainIds.length]!;
-        const groundKey = getLocalGameAssetKey(chosenTerrainId);
-        if (groundKey && this.textures.exists(groundKey)) {
-          const ground = this.add.image(center.x, center.y, groundKey).setDisplaySize(this.projection.tileWidth * (pack ? 1.08 : 1), this.projection.tileHeight * (pack ? 1.22 : 1)).setDepth(center.y - 2);
-          const variation = (x * 13 + y * 17 + currentMap.seed) % 5;
-          if (variation === 1) ground.setTint(0x91a96f);
-          else if (variation === 3) ground.setTint(0x809967);
-          this.terrainSprites.push(ground);
-        }
-        else this.drawDiamond(this.terrain, point, this.color(currentSkin.skin.colors.secondary), 1);
-        if (roadCells.has(key)) {
-          this.terrain.fillStyle(0x796f59, .28);
-          this.terrain.fillEllipse(center.x, center.y + 1, this.projection.tileWidth * 1.04, this.projection.tileHeight * .9);
-          if (roadKey && this.textures.exists(roadKey)) this.terrainSprites.push(this.add.image(center.x, center.y - 1, roadKey).setDisplaySize(this.projection.tileWidth * 1.08, this.projection.tileHeight * 1.22).setDepth(center.y));
-          else { this.terrain.fillStyle(0x978d75, 0.95); this.terrain.fillEllipse(center.x, center.y, this.projection.tileWidth * .82, this.projection.tileHeight * .6); }
+        const variation = (x * 37 + y * 61 + currentMap.seed) % 10;
+        if (variation < 3 && !roadCells.has(key)) {
+          this.terrain.lineStyle(1, this.color(palette.groundSecondary), .3);
+          this.terrain.lineBetween(center.x - 3, center.y + 1, center.x - 1, center.y - 2);
+          this.terrain.lineBetween(center.x - 1, center.y - 2, center.x + 1, center.y + 1);
         }
         if (slots.has(key)) {
           const selected = point.x === selectedBuildSlot?.x && point.y === selectedBuildSlot?.y;
           const occupied = engine.state.towers.some(tower => tower.position.x === x && tower.position.y === y);
-          const slotKey = pack ? getLocalGameAssetKey(pack.buildSlotId) : undefined;
+          const slotKey = currentWorldAssets.textureKey("buildSlot");
           if (slotKey && this.textures.exists(slotKey)) {
             const actionable = Boolean(selectedArchetype) && !occupied;
-            const slot = this.add.image(center.x, center.y - 2, slotKey)
-              .setDisplaySize(this.projection.tileWidth * .8, this.projection.tileHeight * .85)
-              .setTint(selected || this.hoverCell?.x === x && this.hoverCell?.y === y ? 0xffe18c : actionable ? 0xd8ba65 : occupied ? 0x596057 : 0x696a5d)
-              .setAlpha(actionable ? .98 : occupied ? .35 : .62)
-              .setDepth(center.y + 1);
+            const metadata = render.buildSlot;
+            const hovered = this.hoverCell?.x === x && this.hoverCell?.y === y;
+            const affordable = !selectedArchetype || engine.state.gold >= GAME_CONFIG.towers[selectedArchetype].cost;
+            const emphasis = selected ? 1.08 : hovered ? 1.05 : 1;
+            const slot = this.add.image(center.x, center.y, slotKey)
+              .setOrigin(metadata.originX, metadata.originY)
+              .setDisplaySize(this.projection.tileWidth * metadata.scale * emphasis, this.projection.tileHeight * metadata.scale * emphasis)
+              .setTint(selected || hovered ? 0xffe18c : actionable && affordable ? 0xd8ba65 : actionable ? 0x5c5d56 : occupied ? 0x565b54 : 0x8a8169)
+              .setAlpha(actionable && affordable ? .94 : occupied ? .28 : actionable ? .42 : .76)
+              .setDepth(WORLD_VISUAL_DEPTH.buildSlot);
+            slot.setData("buildSlotPulse", actionable && affordable);
+            slot.setData("buildSlotBaseAlpha", slot.alpha);
             this.terrainSprites.push(slot);
+            if (!occupied) {
+              this.roads.lineStyle(selected || hovered ? 2 : 1, selected || hovered ? 0xffdf83 : 0xb89d61, selected || hovered ? .9 : .42);
+              this.roads.strokeEllipse(center.x, center.y, this.projection.tileWidth * .38 * emphasis, this.projection.tileHeight * .38 * emphasis);
+            }
           }
         }
       }
     }
+    const roadWidth = this.projection.tileHeight * .47;
+    for (const [key, directions] of roadConnections) {
+      const [x, y] = key.split(",").map(Number) as [number, number]; const center = this.project({ x, y });
+      this.roads.fillStyle(this.color(palette.roadEdge), 1).fillCircle(center.x, center.y, roadWidth * .62);
+      this.roads.fillStyle(this.color(palette.roadPrimary), 1).fillCircle(center.x, center.y, roadWidth * .48);
+      for (const direction of directions) {
+        const offset = ROAD_DIRECTION_OFFSETS[direction]; const neighbor = this.project({ x: x + offset.x, y: y + offset.y });
+        const edge = { x: (center.x + neighbor.x) / 2, y: (center.y + neighbor.y) / 2 };
+        this.roads.lineStyle(roadWidth * 1.24, this.color(palette.roadEdge), 1).lineBetween(center.x, center.y, edge.x, edge.y);
+        this.roads.lineStyle(roadWidth * .96, this.color(palette.roadPrimary), 1).lineBetween(center.x, center.y, edge.x, edge.y);
+        const dx = edge.x - center.x; const dy = edge.y - center.y; const length = Math.max(1, Math.hypot(dx, dy));
+        const seamX = center.x + dx * .58; const seamY = center.y + dy * .58;
+        const normalX = -dy / length * roadWidth * .34; const normalY = dx / length * roadWidth * .34;
+        this.roads.lineStyle(1, this.color(palette.roadEdge), .5).lineBetween(seamX - normalX, seamY - normalY, seamX + normalX, seamY + normalY);
+      }
+      if (directions.length >= 3) this.roads.lineStyle(1.5, this.color(palette.roadEdge), .52).strokeCircle(center.x, center.y, roadWidth * .72);
+    }
     const base = this.project(currentMap.base);
-    const baseKey = pack ? getLocalGameAssetKey(pack.baseId) : undefined;
+    const baseKey = currentWorldAssets.textureKey("playerBase");
     if (baseKey && this.textures.exists(baseKey)) {
-      this.baseSprite = this.add.image(base.x, base.y - 7, baseKey).setDisplaySize(this.projection.tileWidth * 1.28, this.projection.tileHeight * 2.2).setDepth(base.y + 8);
+      this.baseSprite = placeIsometricSprite(this.add.image(base.x, base.y, baseKey), getIsometricPlacement(this.projection, currentMap.base, currentWorldAssets.manifest, "playerBase"));
       this.terrainSprites.push(this.baseSprite);
     }
     else { this.terrain.fillStyle(0xc4a868, 1); this.terrain.fillTriangle(base.x - 10, base.y + 2, base.x, base.y - 22, base.x + 10, base.y + 2); }
     for (const spawn of currentMap.spawns) {
       const position = this.project(spawn.position);
-      const riftKey = pack ? getLocalGameAssetKey(pack.spawnId) : undefined;
+      const riftKey = currentWorldAssets.textureKey("enemySpawn");
       if (riftKey && this.textures.exists(riftKey)) {
-        const rift = this.add.image(position.x, position.y - 8, riftKey).setDisplaySize(this.projection.tileWidth * .9, this.projection.tileHeight * 2.1).setDepth(position.y + 6);
+        const rift = placeIsometricSprite(this.add.image(position.x, position.y, riftKey), getIsometricPlacement(this.projection, spawn.position, currentWorldAssets.manifest, "enemySpawn"));
         rift.setData("baseScaleX", rift.scaleX); rift.setData("baseScaleY", rift.scaleY);
         this.riftSprites.push(rift); this.terrainSprites.push(rift);
       }
       else { this.terrain.fillStyle(0x271d27, 0.85); this.terrain.fillEllipse(position.x, position.y + 3, 24, 12); this.terrain.lineStyle(3, 0xb76665, 0.95); this.terrain.strokeCircle(position.x, position.y - 2, 10); }
     }
-    const decorIds = pack?.decorationIds ?? [];
-    for (const placement of createDecorationPlacements(currentMap, 16)) {
-      const id = decorIds[placement.variant % Math.max(1, decorIds.length)]; const key = id ? getLocalGameAssetKey(id) : undefined;
+    const decorationAssets = ["propTree", "propRock", "propCrate", "propDecoration", "battlefieldLandmark"] as const;
+    for (const placement of createDecorationPlacements(currentMap, 8)) {
+      const name = decorationAssets[placement.variant % decorationAssets.length]!; const key = currentWorldAssets.textureKey(name);
       if (!key || !this.textures.exists(key)) continue;
       const point = this.project(placement.position);
-      const size = placement.variant === 0 ? 25 : 18;
-      const prop = this.add.image(point.x, point.y - size * .24, key).setDisplaySize(size, size).setDepth(point.y + 2);
+      const prop = placeIsometricSprite(this.add.image(point.x, point.y, key), getIsometricPlacement(this.projection, placement.position, currentWorldAssets.manifest, name));
       this.terrainSprites.push(prop);
     }
   }
@@ -933,8 +1139,8 @@ class BoardScene extends Phaser.Scene {
 
   private drawTower(id: string, point: Coordinate, archetype: TowerArchetype, level: number, selected: boolean): void {
     const center = this.project(point);
-    const pack = getPresentationAssets(currentSkin.packId); const idKey = pack ? getLocalGameAssetKey(pack.towerIds[archetype]) : undefined;
-    const key = idKey && this.textures.exists(idKey) ? idKey : getLocalGameAssetKey("ff.neutral.tower") ?? "tower";
+    const idKey = currentWorldAssets.textureKey(TOWER_WORLD_ASSET_BY_ARCHETYPE[archetype]);
+    const key = this.textures.exists(idKey) ? idKey : getLocalGameAssetKey("ff.neutral.tower") ?? "tower";
     let sprite = this.entitySprites.get(id);
     if (!sprite) {
       sprite = this.add.image(center.x, center.y - 5, key);
@@ -942,7 +1148,7 @@ class BoardScene extends Phaser.Scene {
       this.entitySprites.set(id, sprite);
     }
     if (sprite.texture.key !== key) sprite.setTexture(key);
-    sprite.setPosition(center.x, center.y - 7).setDisplaySize(this.projection.tileWidth * .77, this.projection.tileHeight * 1.85).setDepth(center.y + 12);
+    placeIsometricSprite(sprite, getIsometricPlacement(this.projection, point, currentWorldAssets.manifest, TOWER_WORLD_ASSET_BY_ARCHETYPE[archetype]));
     if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       const age = Math.max(0, this.sceneClock - Number(sprite.getData("bornAt") ?? this.sceneClock));
       const placementFactor = age < 220 ? .72 + .34 * Math.sin(Math.min(1, age / 220) * Math.PI / 2) : 1;
@@ -973,15 +1179,16 @@ class BoardScene extends Phaser.Scene {
     const point = { x: from.x + (to.x - from.x) * progress, y: from.y + (to.y - from.y) * progress };
     const center = this.project(point);
     const directionTarget = this.project(to);
-    const pack = getPresentationAssets(currentSkin.packId); const idKey = pack ? getLocalGameAssetKey(pack.enemyIds[enemy.archetype]) : undefined;
-    const key = idKey && this.textures.exists(idKey) ? idKey : getLocalGameAssetKey("ff.neutral.enemy") ?? "enemy";
+    const idKey = currentWorldAssets.textureKey(ENEMY_WORLD_ASSET_BY_ARCHETYPE[enemy.archetype]);
+    const key = this.textures.exists(idKey) ? idKey : getLocalGameAssetKey("ff.neutral.enemy") ?? "enemy";
     let sprite = this.entitySprites.get(id);
     if (!sprite) { sprite = this.add.image(center.x, center.y, key); this.entitySprites.set(id, sprite); }
     if (sprite.texture.key !== key) sprite.setTexture(key);
-    const size = enemy.archetype === "boss" ? 31 : enemy.archetype === "tank" ? 27 : 23;
+    const assetName = ENEMY_WORLD_ASSET_BY_ARCHETYPE[enemy.archetype];
+    const placement = getIsometricPlacement(this.projection, point, currentWorldAssets.manifest, assetName);
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const bob = reducedMotion ? 0 : Math.sin(this.sceneClock / 105 + Number.parseInt(id.replace(/\D/g, "") || "0", 10)) * 1.6;
-    sprite.setPosition(center.x, center.y - 7 + bob).setDisplaySize(size, size).setFlipX(directionTarget.x < center.x).setDepth(center.y + 15);
+    placeIsometricSprite(sprite, placement).setY(placement.groundScreenY + bob).setFlipX(directionTarget.x < center.x);
     this.dynamic.fillStyle(0x251c1c, 1); this.dynamic.fillRoundedRect(center.x - 9, center.y - 25, 18, 4, 2);
     this.dynamic.fillStyle(0x92d278, 1); this.dynamic.fillRoundedRect(center.x - 9, center.y - 25, 18 * Math.max(0, enemy.hp / enemy.maxHp), 4, 2);
   }
@@ -1053,6 +1260,33 @@ function initializeGame(): void {
   window.addEventListener("resize", resizeGameToStage);
 }
 
+type LocalSettings = { provider: string; model: string; apiKey: string; masterVolume: number; musicVolume: number; effectsVolume: number; language: string; reducedMotion: boolean };
+const settingsKey = "fantasy-frontiers.settings.v1";
+const defaultSettings: LocalSettings = { provider: "deepseek", model: "deepseek-chat", apiKey: "", masterVolume: 80, musicVolume: 70, effectsVolume: 85, language: "zh-CN", reducedMotion: false };
+
+function loadSettings(): LocalSettings {
+  try { return { ...defaultSettings, ...JSON.parse(localStorage.getItem(settingsKey) ?? "{}") as Partial<LocalSettings> }; }
+  catch { return defaultSettings; }
+}
+
+function populateSettings(): void {
+  const value = loadSettings();
+  (document.querySelector<HTMLSelectElement>("#settings-provider")!).value = value.provider;
+  (document.querySelector<HTMLInputElement>("#settings-model")!).value = value.model;
+  (document.querySelector<HTMLInputElement>("#settings-api-key")!).value = value.apiKey;
+  (document.querySelector<HTMLInputElement>("#settings-master-volume")!).value = String(value.masterVolume);
+  (document.querySelector<HTMLInputElement>("#settings-music-volume")!).value = String(value.musicVolume);
+  (document.querySelector<HTMLInputElement>("#settings-effects-volume")!).value = String(value.effectsVolume);
+  (document.querySelector<HTMLSelectElement>("#settings-language")!).value = value.language;
+  (document.querySelector<HTMLInputElement>("#settings-reduced-motion")!).checked = value.reducedMotion;
+  document.documentElement.classList.toggle("reduce-motion", value.reducedMotion);
+}
+
+const menuAssets = resolveWorldAssets("frontier-outpost");
+document.documentElement.style.setProperty("--menu-key-art", `url(${JSON.stringify(menuAssets.worldKeyArtUrl)})`);
+document.documentElement.style.setProperty("--menu-key-position", `${menuAssets.manifest.keyArt.focalX * 100}% ${menuAssets.manifest.keyArt.focalY * 100}%`);
+populateSettings();
+
 document.querySelectorAll<HTMLButtonElement>("[data-archetype]").forEach(button => {
   button.addEventListener("click", () => {
     const archetype = button.dataset.archetype as TowerArchetype;
@@ -1100,7 +1334,7 @@ ui.worldForm.addEventListener("submit", async event => {
 ui.nextWave.addEventListener("click", () => send({ type: "startWave" }));
 ui.pause.addEventListener("click", () => send({ type: "pause" }));
 ui.pauseResume.addEventListener("click", () => send({ type: "resume" }));
-ui.pauseReturn.addEventListener("click", () => { screenFlow.show("hub"); renderWorldDetail(currentWorldId); });
+ui.pauseReturn.addEventListener("click", () => { showHubView("play"); renderWorldDetail(currentWorldId); });
 ui.speed.addEventListener("click", () => { gameSpeed = gameSpeed === 1 ? 2 : 1; renderHud(); });
 ui.upgrade.addEventListener("click", () => { if (selectedTowerId) send({ type: "upgradeTower", towerId: selectedTowerId }); });
 ui.restart.addEventListener("click", () => restart());
@@ -1117,14 +1351,40 @@ ui.playSelectedLevel.addEventListener("click", () => { void enterGameplay(curren
 ui.leaveGameplay.addEventListener("click", () => {
   if (!window.confirm("退出当前关卡？本局尚未完成的战绩不会保存。")) return;
   if (engine.state.status === "running") send({ type: "pause" });
-  screenFlow.show("hub");
+  showHubView("play");
   renderWorldDetail(currentWorldId);
 });
-document.querySelector<HTMLButtonElement>("#open-workshop")!.addEventListener("click", () => setWorkshopVisible(true));
 document.querySelector<HTMLButtonElement>("#close-workshop")!.addEventListener("click", () => setWorkshopVisible(false));
-document.querySelector<HTMLButtonElement>("#close-world-detail")!.addEventListener("click", () => { ui.detail.hidden = true; });
+document.querySelector<HTMLButtonElement>("#close-world-detail")!.addEventListener("click", () => { ui.detail.hidden = true; ui.worldList.hidden = false; });
 ui.evaluate.addEventListener("click", () => { const worldId = ui.detailTitle.dataset.worldId; if (worldId) void evaluateWorld(worldId); });
 ui.publish.addEventListener("click", () => { const worldId = ui.detailTitle.dataset.worldId; if (worldId) void publishWorld(worldId); });
+document.querySelector<HTMLButtonElement>("#menu-play")!.addEventListener("click", () => showHubView("play"));
+document.querySelector<HTMLButtonElement>("#menu-studio")!.addEventListener("click", () => showHubView("studio"));
+document.querySelector<HTMLButtonElement>("#menu-settings")!.addEventListener("click", () => { populateSettings(); showHubView("settings"); });
+document.querySelectorAll<HTMLButtonElement>("[data-back-menu]").forEach(button => button.addEventListener("click", () => showHubView("menu")));
+document.querySelectorAll<HTMLButtonElement>("[data-back-studio]").forEach(button => button.addEventListener("click", () => showHubView("studio")));
+document.querySelector<HTMLButtonElement>("#studio-generate")!.addEventListener("click", () => showHubView("generate"));
+document.querySelector<HTMLButtonElement>("#studio-evaluate")!.addEventListener("click", () => showHubView("evaluation"));
+document.querySelector<HTMLButtonElement>("#evaluation-start")!.addEventListener("click", () => { if (selectedEvaluationWorldId) void evaluateWorld(selectedEvaluationWorldId); });
+document.querySelector<HTMLButtonElement>("#settings-fullscreen")!.addEventListener("click", () => {
+  if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen();
+});
+document.querySelector<HTMLFormElement>("#settings-form")!.addEventListener("submit", event => {
+  event.preventDefault();
+  const value: LocalSettings = {
+    provider: document.querySelector<HTMLSelectElement>("#settings-provider")!.value,
+    model: document.querySelector<HTMLInputElement>("#settings-model")!.value.trim() || defaultSettings.model,
+    apiKey: document.querySelector<HTMLInputElement>("#settings-api-key")!.value.trim(),
+    masterVolume: Number(document.querySelector<HTMLInputElement>("#settings-master-volume")!.value),
+    musicVolume: Number(document.querySelector<HTMLInputElement>("#settings-music-volume")!.value),
+    effectsVolume: Number(document.querySelector<HTMLInputElement>("#settings-effects-volume")!.value),
+    language: document.querySelector<HTMLSelectElement>("#settings-language")!.value,
+    reducedMotion: document.querySelector<HTMLInputElement>("#settings-reduced-motion")!.checked,
+  };
+  localStorage.setItem(settingsKey, JSON.stringify(value));
+  document.documentElement.classList.toggle("reduce-motion", value.reducedMotion);
+  document.querySelector<HTMLElement>("#settings-status")!.textContent = "设置已保存在当前浏览器。";
+});
 document.addEventListener("keydown", event => {
   if (screenFlow.current !== "gameplay") return;
   const target = event.target;
@@ -1148,6 +1408,12 @@ document.addEventListener("pointerdown", event => {
   boardScene?.renderState();
 });
 
-renderHud();
-void refreshWorldLibrary();
+if (assetCalibrationMode) {
+  document.querySelector<HTMLElement>(".shell")!.hidden = true;
+  mountAssetCalibrationPage(new URLSearchParams(window.location.search).get("world") ?? "frontier-outpost");
+} else {
+  renderHud();
+  showHubView("menu");
+  void refreshWorldLibrary();
+}
 window.addEventListener("pagehide", () => game?.destroy(true), { once: true });

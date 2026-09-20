@@ -11,6 +11,7 @@ test.beforeEach(async ({ page }) => {
 test("client and local server bootstrap", async ({ page, request }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "幻想防线" })).toBeVisible();
+  await expect(page.locator(".world-thumbnail").first()).toHaveAttribute("src", /world-key-art/);
   await expect(page.locator("#hub-screen")).toBeVisible();
   await expect(page.locator("#gameplay-screen")).toBeHidden();
   await expect(page.locator("#game-root canvas")).toBeHidden();
@@ -18,6 +19,9 @@ test("client and local server bootstrap", async ({ page, request }) => {
   await page.getByRole("button", { name: "试玩关卡" }).first().click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
   await expect(page.locator("#game-status")).toContainText("部署阶段");
+  await expect.poll(() => page.evaluate(() => performance.getEntriesByType("resource").map(entry => entry.name).some(name => name.includes("battle-backdrop")))).toBe(true);
+  await expect.poll(() => page.evaluate(() => performance.getEntriesByType("resource").map(entry => entry.name).some(name => name.includes("road-straight")))).toBe(true);
+  await expect.poll(() => page.evaluate(() => performance.getEntriesByType("resource").map(entry => entry.name).some(name => name.includes("player-base")))).toBe(true);
   await expect(page.locator("#wave-button img")).toHaveCount(1);
   await expect(page.locator("#speed-button img")).toHaveCount(1);
   await expect(page.locator("#hub-screen")).toBeHidden();
@@ -36,6 +40,7 @@ test("player can open the Creative Workshop and return to My Worlds", async ({ p
   await page.goto("/");
   await page.getByRole("button", { name: "管理详情" }).first().click();
   await expect(page.locator("#detail-levels")).toContainText("EASY");
+  await expect(page.locator("#world-detail")).toHaveCSS("background-image", /world-key-art/);
   await expect(page.locator("#evaluation-reports")).toContainText("尚无评测报告");
   await page.getByRole("button", { name: "收起" }).click();
   await page.getByRole("button", { name: "创意工坊", exact: true }).click();
@@ -84,7 +89,7 @@ test("application stays centered in a landscape phone frame without page scrolli
         page.evaluate(() => ({ width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight })),
       ]);
       if (!shellBounds || !stageBounds || !canvasBounds) return false;
-      return Math.abs(shellBounds.width / shellBounds.height - 932 / 430) < .02
+      return Math.abs(shellBounds.width / shellBounds.height - 16 / 9) < .02
         && shellBounds.width <= viewport.width + 1
         && shellBounds.height <= viewport.height + 1
         && stageBounds.x >= shellBounds.x
@@ -132,7 +137,7 @@ test("player can build, upgrade, start, pause, and restart an Easy game", async 
   });
   const insetTop = insets.top;
   const insetBottom = insets.bottom;
-  const scale = Math.min((viewWidth - 32) / (sum * 26), (viewHeight - insetTop - insetBottom) / (sum * 16)) * 1.22;
+  const scale = Math.min((viewWidth - 32) / (sum * 26), (viewHeight - insetTop - insetBottom) / (sum * 16));
   const tileWidth = 52 * scale;
   const tileHeight = 32 * scale;
   const anchorX = viewWidth / 2 - ((map.width - map.height) * tileWidth) / 4;

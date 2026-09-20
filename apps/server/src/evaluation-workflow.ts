@@ -24,7 +24,7 @@ const decisionSchema = z.object({
   if (value.recommendation === "needs_more_testing" && !value.requestFollowup) context.addIssue({ code: "custom", message: "Insufficient evidence requires a bounded follow-up experiment" });
 });
 const finalSchema = z.object({
-  summary: qualitative(600), findings: z.array(qualitative(400)).min(1).max(8), recommendation: z.enum(["balanced", "needs_tuning", "needs_more_testing"]),
+  summary: qualitative(600), findings: z.array(qualitative(400)).min(1).max(8), recommendation: z.enum(["balanced", "needs_tuning"]),
 }).strict();
 type QualitativeReport = { summary: string; findings: string[]; recommendation: "balanced" | "needs_tuning" | "needs_more_testing" };
 
@@ -98,8 +98,22 @@ export class EvaluationWorkflow {
     return created;
   }
   private async ask<T>(input: unknown, schema: { parse(value: unknown): T }): Promise<T> {
-    const result = await this.model.completeJson({ systemPrompt, userInput: input, maxTokens: 1400 });
-    return schema.parse(result);
+    let validationFeedback = "";
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const result = await this.model.completeJson({
+          systemPrompt: validationFeedback ? `${systemPrompt}\n\nThe previous response failed schema validation. Return a shorter response with every required field and no extra fields. Validation feedback: ${validationFeedback}` : systemPrompt,
+          userInput: input,
+          maxTokens: 1400,
+        });
+        return schema.parse(result);
+      } catch (error) {
+        lastError = error;
+        validationFeedback = error instanceof Error ? error.message.slice(0, 600) : "invalid structured response";
+      }
+    }
+    throw lastError;
   }
   private async evaluate(record: EvaluationRecord): Promise<void> {
     const tools = new ReadOnlyEvaluationTools(this.store, record.id);
@@ -119,7 +133,6 @@ export class EvaluationWorkflow {
         const followupMetrics = tools.calculate_metrics(followup.map(run => run.id));
         const followupComparison = tools.compare_runs(baseline.map(run => run.id), followup.map(run => run.id));
         reportText = await this.ask({ phase: "final_report", initial: first, followupPolicy: first.followupPolicy, followup: followupMetrics, comparison: followupComparison, distribution: tools.inspect_distribution(followup.map(run => run.id)) }, finalSchema);
-        if (reportText.recommendation === "needs_more_testing") throw new Error("evaluation_evidence_insufficient");
       }
       const runs = tools.allRuns();
       const combined = tools.calculate_metrics(runs.map(run => run.id));

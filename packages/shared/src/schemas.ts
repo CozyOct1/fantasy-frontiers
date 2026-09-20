@@ -50,6 +50,7 @@ export const themeSpecSchema = z.object({
 });
 export type ThemeSpec = z.infer<typeof themeSpecSchema>;
 export const worldSkinSchema = z.object({
+  assetWorldId: z.string().regex(/^[a-z0-9][a-z0-9-]*$/).optional(),
   themePackId: z.string().min(1), colors: z.object({ primary: z.string(), secondary: z.string(), accent: z.string(), background: z.string(), text: z.string() }),
   assets: z.object({ backgroundId: z.string().min(1), panelId: z.string().min(1), buttonId: z.string().min(1), frameId: z.string().min(1), decorationIds: z.array(z.string()) }),
 });
@@ -100,6 +101,68 @@ export const assetManifestSchema = z.object({ version: z.string().min(1), assets
   if (new Set(ids).size !== ids.length) context.addIssue({ code: "custom", message: "Asset IDs must be unique", path: ["assets"] });
 });
 export type AssetManifest = z.infer<typeof assetManifestSchema>;
+
+const worldAssetRelativePathSchema = z.string().regex(/^(?:source|processed)\/[a-z0-9_./-]+\.png$/).refine(path => !path.split("/").includes(".."), "World asset paths cannot traverse parent directories");
+const worldRuntimeAssetPathSchema = z.string().regex(/^runtime\/[a-z0-9_./-]+\.webp$/).refine(path => !path.split("/").includes(".."), "World runtime asset paths cannot traverse parent directories");
+const normalizedFocalPointSchema = z.number().min(0).max(1);
+export const worldAssetRenderMetadataSchema = z.object({
+  originX: normalizedFocalPointSchema,
+  originY: normalizedFocalPointSchema,
+  scale: z.number().positive(),
+  depthBias: z.number(),
+  footprintWidthTiles: z.number().positive(),
+  footprintHeightTiles: z.number().positive(),
+}).strict();
+const worldAssetRenderKeys = {
+  playerBase: worldAssetRenderMetadataSchema, enemySpawn: worldAssetRenderMetadataSchema, buildSlot: worldAssetRenderMetadataSchema, battlefieldLandmark: worldAssetRenderMetadataSchema,
+  towerBasic: worldAssetRenderMetadataSchema, towerAoe: worldAssetRenderMetadataSchema, towerSlow: worldAssetRenderMetadataSchema, towerHeavy: worldAssetRenderMetadataSchema,
+  enemyNormal: worldAssetRenderMetadataSchema, enemyFast: worldAssetRenderMetadataSchema, enemyTank: worldAssetRenderMetadataSchema, enemyBoss: worldAssetRenderMetadataSchema,
+  propTree: worldAssetRenderMetadataSchema, propRock: worldAssetRenderMetadataSchema, propCrate: worldAssetRenderMetadataSchema, propDecoration: worldAssetRenderMetadataSchema,
+  roadStraight: worldAssetRenderMetadataSchema, roadCorner: worldAssetRenderMetadataSchema, roadCross: worldAssetRenderMetadataSchema, roadEnd: worldAssetRenderMetadataSchema,
+} as const;
+export const worldAssetManifestSchema = z.object({
+  version: z.literal(1),
+  worldId: z.string().regex(/^[a-z0-9][a-z0-9-]*$/),
+  source: z.object({
+    worldKeyArt: worldAssetRelativePathSchema,
+    battleBackdrop: worldAssetRelativePathSchema,
+    battleAssetSheet: worldAssetRelativePathSchema,
+  }).strict(),
+  keyArt: z.object({ focalX: normalizedFocalPointSchema, focalY: normalizedFocalPointSchema }).strict(),
+  battlefieldPalette: z.object({
+    groundPrimary: z.string().regex(/^#[0-9a-f]{6}$/i),
+    groundSecondary: z.string().regex(/^#[0-9a-f]{6}$/i),
+    roadPrimary: z.string().regex(/^#[0-9a-f]{6}$/i),
+    roadEdge: z.string().regex(/^#[0-9a-f]{6}$/i),
+    cliff: z.string().regex(/^#[0-9a-f]{6}$/i),
+    ambientTint: z.string().regex(/^#[0-9a-f]{6}$/i),
+  }).strict(),
+  processing: z.object({
+    columns: z.literal(4), rows: z.literal(5), cellWidth: z.literal(512), cellHeight: z.literal(512),
+    sourceWidth: z.number().int().positive(), sourceHeight: z.number().int().positive(),
+    backgroundColor: z.string().regex(/^#[0-9a-f]{6}$/i), backgroundTolerance: z.number().int().min(0).max(255),
+  }).strict(),
+  assets: z.object({
+    playerBase: worldAssetRelativePathSchema, enemySpawn: worldAssetRelativePathSchema, buildSlot: worldAssetRelativePathSchema, battlefieldLandmark: worldAssetRelativePathSchema,
+    towerBasic: worldAssetRelativePathSchema, towerAoe: worldAssetRelativePathSchema, towerSlow: worldAssetRelativePathSchema, towerHeavy: worldAssetRelativePathSchema,
+    enemyNormal: worldAssetRelativePathSchema, enemyFast: worldAssetRelativePathSchema, enemyTank: worldAssetRelativePathSchema, enemyBoss: worldAssetRelativePathSchema,
+    propTree: worldAssetRelativePathSchema, propRock: worldAssetRelativePathSchema, propCrate: worldAssetRelativePathSchema, propDecoration: worldAssetRelativePathSchema,
+    roadStraight: worldAssetRelativePathSchema, roadCorner: worldAssetRelativePathSchema, roadCross: worldAssetRelativePathSchema, roadEnd: worldAssetRelativePathSchema,
+  }).strict(),
+  runtime: z.object({
+    worldKeyArt: worldRuntimeAssetPathSchema, battleBackdrop: worldRuntimeAssetPathSchema,
+    assets: z.object({
+      playerBase: worldRuntimeAssetPathSchema, enemySpawn: worldRuntimeAssetPathSchema, buildSlot: worldRuntimeAssetPathSchema, battlefieldLandmark: worldRuntimeAssetPathSchema,
+      towerBasic: worldRuntimeAssetPathSchema, towerAoe: worldRuntimeAssetPathSchema, towerSlow: worldRuntimeAssetPathSchema, towerHeavy: worldRuntimeAssetPathSchema,
+      enemyNormal: worldRuntimeAssetPathSchema, enemyFast: worldRuntimeAssetPathSchema, enemyTank: worldRuntimeAssetPathSchema, enemyBoss: worldRuntimeAssetPathSchema,
+      propTree: worldRuntimeAssetPathSchema, propRock: worldRuntimeAssetPathSchema, propCrate: worldRuntimeAssetPathSchema, propDecoration: worldRuntimeAssetPathSchema,
+      roadStraight: worldRuntimeAssetPathSchema, roadCorner: worldRuntimeAssetPathSchema, roadCross: worldRuntimeAssetPathSchema, roadEnd: worldRuntimeAssetPathSchema,
+    }).strict(),
+  }).strict(),
+  render: z.object(worldAssetRenderKeys).strict(),
+}).strict();
+export type WorldAssetManifest = z.infer<typeof worldAssetManifestSchema>;
+export type WorldAssetRenderMetadata = z.infer<typeof worldAssetRenderMetadataSchema>;
 export const themePresentationAssetSchema = z.object({
   terrainTileIds: z.array(z.string()).min(1), pathTileId: z.string(), buildSlotId: z.string(), spawnId: z.string(), baseId: z.string(),
   towerIds: z.record(towerArchetypeSchema, z.string()), enemyIds: z.record(enemyArchetypeSchema, z.string()),

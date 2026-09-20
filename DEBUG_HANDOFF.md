@@ -43,3 +43,31 @@ Completed: development-only counters sampled `elapsedTime`, status, wave, queue 
 - `pnpm test:e2e`: 10 passed; production-only smoke skipped by design in the default suite.
 - `PRODUCTION_SMOKE=1 pnpm exec playwright test tests/e2e/production-smoke.spec.ts`: 1 passed.
 - `pnpm verify`: typecheck, 44 Vitest tests and production build passed.
+
+---
+
+## 2026-09-20 — Real DeepSeek evaluation contract failure
+
+### 错误现象
+
+The first real DeepSeek evaluation reached the model but all level records failed schema validation or ended with `evaluation_evidence_insufficient`.
+
+### 根因
+
+- The initial Zod schema required `hypothesis`, but the prompt omitted that field.
+- The final schema allowed `needs_more_testing`, while the workflow rejected that value after the only allowed follow-up.
+- The final prompt did not explicitly prohibit echoing the input `phase` field.
+
+### 修正
+
+- Aligned the prompt with every required initial field and maximum length.
+- Restricted the post-follow-up conclusion to `balanced` or `needs_tuning`.
+- Explicitly prohibited extra final fields and added up to three bounded validation retries.
+- Required concise Simplified Chinese prose.
+
+### 解决验证
+
+- Real DeepSeek run completed all three Border Outpost levels.
+- Each completed report references novice, baseline, and expert Simulator runs and deterministic metrics.
+- `reports/evaluations/frontier-world.md` was generated successfully.
+- `pnpm verify`: 50 tests passed; typecheck and production build passed.

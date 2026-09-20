@@ -8,11 +8,16 @@ import { AppStore } from "./store.js";
 import { DeepSeekClient } from "./deepseek.js";
 import { CreativeWorkflow } from "./creative-workflow.js";
 import { EvaluationWorkflow } from "./evaluation-workflow.js";
+import { renderEvaluationMarkdown } from "./evaluation-markdown.js";
 
 const envPath = fileURLToPath(new URL("../../../.env", import.meta.url));
 const json = (response: ServerResponse, status: number, body: unknown) => {
   response.writeHead(status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "access-control-allow-origin": "http://127.0.0.1:5173", "access-control-allow-methods": "GET,POST,OPTIONS", "access-control-allow-headers": "content-type" });
   response.end(JSON.stringify(body));
+};
+const markdown = (response: ServerResponse, filename: string, body: string) => {
+  response.writeHead(200, { "content-type": "text/markdown; charset=utf-8", "content-disposition": `attachment; filename="${filename}"`, "cache-control": "no-store", "access-control-allow-origin": "http://127.0.0.1:5173" });
+  response.end(body);
 };
 async function readJson(request: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
@@ -78,6 +83,15 @@ export function createAppServer(store: AppStore, workflow?: CreativeWorkflow, ev
       if (request.method === "GET" && parts[0] === "api" && parts[1] === "worlds" && parts[3] === "evaluations" && parts.length === 4) {
         if (!store.getWorld(parts[2]!)) return json(response, 404, { error: "world_not_found" });
         return json(response, 200, { evaluations: store.listEvaluations(parts[2]!) });
+      }
+      if (request.method === "GET" && parts[0] === "api" && parts[1] === "worlds" && parts[3] === "evaluation-report.md" && parts.length === 4) {
+        const world = store.getWorld(parts[2]!);
+        if (!world) return json(response, 404, { error: "world_not_found" });
+        const evaluations = store.listEvaluations(world.id);
+        const completed = evaluations.filter(record => record.status === "completed" && record.report);
+        if (completed.length === 0) return json(response, 404, { error: "evaluation_report_not_ready" });
+        const evidence = new Map(completed.map(record => [record.id, store.getEvaluationEvidence(record.id)]));
+        return markdown(response, `${world.id}-evaluation.md`, renderEvaluationMarkdown({ world, levels: store.listLevels(world.id), evaluations, evidenceByEvaluationId: evidence }));
       }
       if (request.method === "POST" && url.pathname === "/api/worlds/generate") {
         if (!workflow) return json(response, 503, { error: "creative_workflow_unavailable" });

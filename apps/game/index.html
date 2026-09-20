@@ -8,48 +8,67 @@
   </head>
   <body>
     <main class="shell">
-      <section id="hub-screen" data-app-screen="hub" aria-label="世界大厅">
-      <header class="masthead">
-        <div>
-          <p class="eyebrow">FANTASY FRONTIERS · V1 PLAYABLE SLICE</p>
-          <h1>幻想防线</h1>
-          <p class="intro">选择世界与关卡，开始防守。</p>
-        </div>
-      </header>
+      <section id="hub-screen" data-app-screen="hub" aria-label="主菜单">
+        <section class="hub-view main-menu-view" data-hub-view="menu" aria-label="游戏主菜单">
+          <div class="main-menu-copy">
+            <p class="eyebrow">FANTASY FRONTIERS</p>
+            <h1>幻想防线</h1>
+            <p class="main-menu-subtitle">守住每一个由想象创造的世界</p>
+            <nav class="main-menu-actions" aria-label="主菜单选项">
+              <button class="menu-button primary" id="menu-play" type="button">开始游戏</button>
+              <button class="menu-button" id="menu-studio" type="button">创意工坊</button>
+              <button class="menu-button" id="menu-settings" type="button">游戏设置</button>
+            </nav>
+          </div>
+          <small class="game-version">V1.0 · PLAYABLE SLICE</small>
+        </section>
 
-      <section class="world-library" aria-label="我的世界">
-        <div><p class="eyebrow">MY WORLDS · LOCAL SAVE</p><h2>我的世界</h2></div>
-        <button class="world-select" id="open-workshop" type="button">创意工坊</button>
-        <div id="world-list" class="world-list" aria-live="polite">正在连接本地存档…</div>
-      </section>
-      <section class="world-creator" aria-label="创建主题世界">
-        <form id="world-create-form">
-          <label for="world-prompt">创建一个新世界</label>
-          <div class="world-create-row"><input id="world-prompt" name="prompt" maxlength="600" minlength="8" placeholder="例如：漂浮群岛上的星象守卫抵挡虚空生物" required /><button class="button primary" id="world-create-button" type="submit">生成世界</button></div>
-        </form>
-        <div id="generation-jobs" class="generation-jobs" aria-live="polite"></div>
-      </section>
+        <section class="hub-view hub-page" data-hub-view="play" aria-label="选择世界" hidden>
+          <header class="hub-page-header"><button class="hub-back" data-back-menu type="button" aria-label="返回主菜单">‹</button><div><p class="eyebrow">START GAME</p><h2>选择世界</h2></div></header>
+          <div id="world-list" class="world-list world-grid" aria-live="polite">正在连接本地存档…</div>
+          <section class="world-detail" id="world-detail" aria-label="关卡选择" hidden>
+            <div class="section-heading"><div><p class="eyebrow">SELECT LEVEL</p><h2 id="detail-title">世界详情</h2></div><button class="world-select" id="close-world-detail" type="button">返回世界</button></div>
+            <p class="detail-summary" id="detail-summary"></p>
+            <div class="detail-levels" id="detail-levels"></div>
+            <div class="detail-actions evaluation-only" hidden><button class="button secondary" id="evaluate-world" type="button">开始评测</button><button class="button primary" id="publish-world" type="button" hidden>发布</button><span id="publish-status" role="status"></span></div>
+            <div class="evaluation-reports evaluation-only" id="evaluation-reports" hidden></div>
+          </section>
+        </section>
 
-      <section class="workshop-panel" id="workshop-panel" aria-label="创意工坊" hidden>
-        <div class="section-heading"><div><p class="eyebrow">CREATIVE WORKSHOP · PUBLISHED WORLDS</p><h2>创意工坊</h2></div><button class="world-select" id="close-workshop" type="button">返回我的世界</button></div>
-        <div class="workshop-list" id="workshop-list" aria-live="polite">正在加载已发布世界…</div>
-      </section>
+        <section class="hub-view hub-page studio-home" data-hub-view="studio" aria-label="创意工坊" hidden>
+          <header class="hub-page-header"><button class="hub-back" data-back-menu type="button" aria-label="返回主菜单">‹</button><div><p class="eyebrow">CREATION STUDIO</p><h2>创意工坊</h2><p>创造、测试并完善属于你的塔防世界。</p></div></header>
+          <div class="studio-tools">
+            <button class="studio-tool-card" id="studio-generate" type="button"><span>✦</span><strong>生成世界</strong><small>输入世界观，由 AI 创建完整三关世界</small></button>
+            <button class="studio-tool-card" id="studio-evaluate" type="button"><span>◈</span><strong>AI 评测</strong><small>自动试玩、追加实验并分析关卡难度</small></button>
+          </div>
+          <p class="studio-roadmap">社区世界市场将在后续版本开放</p>
+        </section>
 
-      <section class="world-detail" id="world-detail" aria-label="世界详情" hidden>
-        <div class="section-heading"><div><p class="eyebrow">WORLD MANAGEMENT</p><h2 id="detail-title">世界详情</h2></div><button class="world-select" id="close-world-detail" type="button">收起</button></div>
-        <p class="detail-summary" id="detail-summary"></p>
-        <div class="detail-levels" id="detail-levels"></div>
-        <div class="detail-actions"><button class="button secondary" id="evaluate-world" type="button">开始评测</button><button class="button primary" id="publish-world" type="button">发布到创意工坊</button><span id="publish-status" role="status"></span></div>
-        <div class="evaluation-reports" id="evaluation-reports"></div>
-      </section>
+        <section class="hub-view hub-page" data-hub-view="generate" aria-label="生成世界" hidden>
+          <header class="hub-page-header"><button class="hub-back" data-back-studio type="button" aria-label="返回创意工坊">‹</button><div><p class="eyebrow">WORLD GENERATOR</p><h2>生成世界</h2></div></header>
+          <section class="world-creator" aria-label="创建主题世界"><form id="world-create-form"><label for="world-prompt">描述你想守护的世界</label><div class="world-create-row"><input id="world-prompt" name="prompt" maxlength="600" minlength="8" placeholder="例如：漂浮群岛上的星象守卫抵挡虚空生物" required /><button class="button primary" id="world-create-button" type="submit">生成世界</button></div></form><div id="generation-jobs" class="generation-jobs" aria-live="polite"></div></section>
+          <div id="generation-world-list" class="creator-world-list" aria-live="polite"></div>
+        </section>
 
-      <nav class="difficulty-tabs" aria-label="选择关卡难度">
-        <span>边境战役</span>
-        <button class="difficulty-button selected" data-difficulty="easy">Easy</button>
-        <button class="difficulty-button" data-difficulty="medium">Medium</button>
-        <button class="difficulty-button" data-difficulty="hard">Hard</button>
-        <button class="button primary" id="play-selected-level" type="button">开始关卡</button>
-      </nav>
+        <section class="hub-view hub-page" data-hub-view="evaluation" aria-label="AI 评测" hidden>
+          <header class="hub-page-header"><button class="hub-back" data-back-studio type="button" aria-label="返回创意工坊">‹</button><div><p class="eyebrow">EVALUATION AGENT</p><h2>AI 评测</h2><p>选择世界，评测 Agent 将通过确定性模拟检查三种难度。</p></div></header>
+          <div id="evaluation-world-list" class="evaluation-world-list" aria-live="polite"></div>
+          <section id="evaluation-detail" class="evaluation-workspace" hidden><div class="section-heading"><h2 id="evaluation-title">评测报告</h2><div class="evaluation-actions"><a class="button secondary" id="evaluation-download" href="#" download hidden>下载 Markdown</a><button class="button primary" id="evaluation-start" type="button">开始评测</button></div></div><p id="evaluation-status" class="detail-summary"></p><div id="evaluation-report-list" class="evaluation-reports"></div></section>
+        </section>
+
+        <section class="hub-view hub-page settings-page" data-hub-view="settings" aria-label="游戏设置" hidden>
+          <header class="hub-page-header"><button class="hub-back" data-back-menu type="button" aria-label="返回主菜单">‹</button><div><p class="eyebrow">SETTINGS</p><h2>游戏设置</h2></div></header>
+          <form id="settings-form" class="settings-form">
+            <fieldset><legend>AI 设置</legend><label>Provider<select id="settings-provider"><option value="deepseek">DeepSeek</option></select></label><label>Model<input id="settings-model" value="deepseek-chat" /></label><label>API Key<input id="settings-api-key" type="password" autocomplete="new-password" placeholder="sk-••••••••" /></label></fieldset>
+            <fieldset><legend>声音</legend><label>主音量<input id="settings-master-volume" type="range" min="0" max="100" value="80" /></label><label>音乐<input id="settings-music-volume" type="range" min="0" max="100" value="70" /></label><label>音效<input id="settings-effects-volume" type="range" min="0" max="100" value="85" /></label></fieldset>
+            <fieldset><legend>画面与语言</legend><label>语言<select id="settings-language"><option value="zh-CN">简体中文</option><option value="en">English</option></select></label><label class="check-setting"><input id="settings-reduced-motion" type="checkbox" /> 减少动态效果</label><button class="button secondary" id="settings-fullscreen" type="button">切换全屏</button></fieldset>
+            <div class="settings-actions"><button class="button primary" type="submit">保存设置</button><span id="settings-status" role="status"></span></div>
+          </form>
+        </section>
+
+        <section class="workshop-panel" id="workshop-panel" hidden><button id="close-workshop" type="button">关闭</button><div id="workshop-list"></div></section>
+        <div class="world-library" hidden></div>
+        <nav class="difficulty-tabs" hidden><button data-difficulty="easy">Easy</button><button data-difficulty="medium">Medium</button><button data-difficulty="hard">Hard</button><button id="play-selected-level" type="button">开始关卡</button></nav>
       </section>
 
       <section id="gameplay-screen" data-app-screen="gameplay" aria-label="塔防游戏" hidden>

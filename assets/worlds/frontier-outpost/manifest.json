@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "worldId": "frontier-outpost",
+  "source": {
+    "worldKeyArt": "source/world-key-art.png",
+    "battleBackdrop": "source/battle-backdrop.png",
+    "battleAssetSheet": "source/battle-asset-sheet.png"
+  },
+  "keyArt": {
+    "focalX": 0.5,
+    "focalY": 0.5
+  },
+  "battlefieldPalette": {
+    "groundPrimary": "#66784f",
+    "groundSecondary": "#71815a",
+    "roadPrimary": "#8a806b",
+    "roadEdge": "#5f5749",
+    "cliff": "#394534",
+    "ambientTint": "#53675b"
+  },
+  "processing": {
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 512,
+    "cellHeight": 512,
+    "sourceWidth": 1122,
+    "sourceHeight": 1402,
+    "backgroundColor": "#697a8c",
+    "backgroundTolerance": 24
+  },
+  "assets": {
+    "playerBase": "processed/structures/player-base.png",
+    "enemySpawn": "processed/structures/enemy-spawn.png",
+    "buildSlot": "processed/structures/build-slot.png",
+    "battlefieldLandmark": "processed/structures/battlefield-landmark.png",
+    "towerBasic": "processed/towers/tower-basic.png",
+    "towerAoe": "processed/towers/tower-aoe.png",
+    "towerSlow": "processed/towers/tower-slow.png",
+    "towerHeavy": "processed/towers/tower-heavy.png",
+    "enemyNormal": "processed/enemies/enemy-normal.png",
+    "enemyFast": "processed/enemies/enemy-fast.png",
+    "enemyTank": "processed/enemies/enemy-tank.png",
+    "enemyBoss": "processed/enemies/enemy-boss.png",
+    "propTree": "processed/props/prop-tree.png",
+    "propRock": "processed/props/prop-rock.png",
+    "propCrate": "processed/props/prop-crate.png",
+    "propDecoration": "processed/props/prop-decoration.png",
+    "roadStraight": "processed/roads/road-straight.png",
+    "roadCorner": "processed/roads/road-corner.png",
+    "roadCross": "processed/roads/road-cross.png",
+    "roadEnd": "processed/roads/road-end.png"
+  },
+  "runtime": {
+    "worldKeyArt": "runtime/world-key-art.webp",
+    "battleBackdrop": "runtime/battle-backdrop.webp",
+    "assets": {
+      "playerBase": "runtime/structures/player-base.webp",
+      "enemySpawn": "runtime/structures/enemy-spawn.webp",
+      "buildSlot": "runtime/structures/build-slot.webp",
+      "battlefieldLandmark": "runtime/structures/battlefield-landmark.webp",
+      "towerBasic": "runtime/towers/tower-basic.webp",
+      "towerAoe": "runtime/towers/tower-aoe.webp",
+      "towerSlow": "runtime/towers/tower-slow.webp",
+      "towerHeavy": "runtime/towers/tower-heavy.webp",
+      "enemyNormal": "runtime/enemies/enemy-normal.webp",
+      "enemyFast": "runtime/enemies/enemy-fast.webp",
+      "enemyTank": "runtime/enemies/enemy-tank.webp",
+      "enemyBoss": "runtime/enemies/enemy-boss.webp",
+      "propTree": "runtime/props/prop-tree.webp",
+      "propRock": "runtime/props/prop-rock.webp",
+      "propCrate": "runtime/props/prop-crate.webp",
+      "propDecoration": "runtime/props/prop-decoration.webp",
+      "roadStraight": "runtime/roads/road-straight.webp",
+      "roadCorner": "runtime/roads/road-corner.webp",
+      "roadCross": "runtime/roads/road-cross.webp",
+      "roadEnd": "runtime/roads/road-end.webp"
+    }
+  },
+  "render": {
+    "playerBase": {
+      "originX": 0.5,
+      "originY": 0.93,
+      "scale": 2.7,
+      "depthBias": 8,
+      "footprintWidthTiles": 2,
+      "footprintHeightTiles": 2
+    },
+    "enemySpawn": {
+      "originX": 0.5,
+      "originY": 0.92,
+      "scale": 1.8,
+      "depthBias": 4,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "buildSlot": {
+      "originX": 0.5,
+      "originY": 0.5,
+      "scale": 0.5,
+      "depthBias": -20,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "battlefieldLandmark": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 1.45,
+      "depthBias": 2,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "towerBasic": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 1.7,
+      "depthBias": 3,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "towerAoe": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 1.85,
+      "depthBias": 3,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "towerSlow": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 1.8,
+      "depthBias": 3,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "towerHeavy": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 1.95,
+      "depthBias": 3,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "enemyNormal": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 1.15,
+      "depthBias": 6,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "enemyFast": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 1.15,
+      "depthBias": 6,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "enemyTank": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 1.15,
+      "depthBias": 6,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "enemyBoss": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 1.55,
+      "depthBias": 8,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "propTree": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 1.55,
+      "depthBias": 0,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "propRock": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 1.05,
+      "depthBias": 0,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "propCrate": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 0.9,
+      "depthBias": 0,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "propDecoration": {
+      "originX": 0.5,
+      "originY": 0.94,
+      "scale": 1.1,
+      "depthBias": 0,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "roadStraight": {
+      "originX": 0.5,
+      "originY": 0.5,
+      "scale": 1,
+      "depthBias": 0,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "roadCorner": {
+      "originX": 0.5,
+      "originY": 0.5,
+      "scale": 1,
+      "depthBias": 0,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "roadCross": {
+      "originX": 0.5,
+      "originY": 0.5,
+      "scale": 1,
+      "depthBias": 0,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    },
+    "roadEnd": {
+      "originX": 0.5,
+      "originY": 0.5,
+      "scale": 1,
+      "depthBias": 0,
+      "footprintWidthTiles": 1,
+      "footprintHeightTiles": 1
+    }
+  }
+}
