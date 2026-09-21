@@ -2,12 +2,12 @@
   "schemaVersion": 3,
   "status": "PASS",
   "verify": {
-    "command": "pnpm test:e2e",
+    "command": "pnpm test:e2e --workers=2",
     "exitCode": 0,
     "suites": [
-      "10 Playwright scenarios passed; production-only smoke skipped in the default suite",
-      "PRODUCTION_SMOKE=1 production subpath scenario passed separately",
-      "pnpm verify passed: typecheck, 44 Vitest tests, production build"
+      "12 Playwright scenarios passed; production-only smoke skipped in the default suite",
+      "Desktop, 390x844 / 360x640 portrait, 844x390 landscape, reduced motion, and emulated touch input checked",
+      "pnpm verify passed: typecheck, 52 Vitest tests, production build"
     ]
   },
   "completeRun": {
@@ -26,7 +26,10 @@
     "restart": "PASS"
   },
   "limitations": [
-    { "scope": "physical mobile device", "reason": "Validated at 390x844 Chromium viewport; physical-device input, thermal and sustained performance were not available." },
-    { "scope": "bundle size", "reason": "Phaser application chunk is approximately 1.40 MB and still emits Vite's 500 KB chunk warning." }
+    { "scope": "physical mobile device", "reason": "Viewport and touch emulation passed in Chromium; physical-device input, thermal and sustained performance were not available." },
+    { "scope": "bundle size", "reason": "Phaser application chunk is approximately 1.59 MB and still emits Vite's 500 KB chunk warning." },
+    { "scope": "commercial art finish", "reason": "The modular framework is implemented; stock castle/vegetation and outlined combat sprites still need a bespoke style-unification pass." },
+    { "scope": "production deployment and live AI", "reason": "Not exercised or changed in this pass. Default E2E skips the production preview scenario; existing-world play was verified without generation requests." },
+    { "scope": "test resource contention", "reason": "An earlier concurrent browser/unit run timed out. Separate final verify and two-worker browser runs passed without relaxing test limits." }
   ]
 }

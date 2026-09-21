@@ -1,5 +1,19 @@
 # CODEX_HANDOFF
 
+## Current handoff — 2026-09-21 modular fantasy presentation
+
+- Scope: lobby, battle rendering, shared UI and responsive input; no core mechanics, server workflows, stats, dependencies, or production deployment changed.
+- Lobby: independently animated clouds, castle light, banners, torches, magic and particles; two main actions and upper-right settings.
+- World cards: modular covers, Chinese difficulty badges, actual campaign progress. Generation/evaluation navigation preserved.
+- Battle: no baked backdrop; MapSpec roads, visible fixed slots, labelled entrances/base, independent sprites, ten-frame walk cycles, upgrade/hit/reward feedback. Touch gets a nearest-slot 22px tolerance; legal placement stays in Game Core.
+- Resources: 54 curated local PNGs (about 388 KB on disk), Asset MCP / OpenGameArt provenance, CraftPix OGA-BY attribution in Settings and `assets/library/realm/CREDITS.md`; no runtime MCP or external asset fetches.
+- Important files: `fantasy-scene.ts`, `fantasy-asset-config.ts`, `world-asset-registry.ts`, `main.ts`, `style.css`, `scripts/import-fantasy-assets.ts`, `docs/v1/03-fantasy-presentation.md`.
+- Verification: `pnpm verify` passed (52 tests, typecheck, production build). `pnpm test:e2e --workers=2`: 12 passed, 1 production-preview test skipped. Six-wave victory, persisted result, reload, restart, reduced motion, viewport sizes and emulated touch checked. Earlier parallel verification timed out from resource contention; separate reruns passed without loosening limits. See `qa/verification.json`.
+- Known limitations: stock castle/vegetation and outlined combat art are not yet a fully bespoke unified hand-painted set; world covers share one composition; no physical-device performance certification, new audio, commercial-release certification, or live AI call made in this pass. Existing Phaser bundle warning remains (~1.59 MB JS uncompressed).
+- Next safest work: evaluate the captured lobby/battle frames with the user, curate a coherent dedicated castle/vegetation family, then profile on physical low-end mobile hardware. Do not add systems to mask remaining art-direction work.
+
+The sections below are historical context from earlier passes and do not supersede this dated handoff.
+
 ## Project Goal
 
 Keep deterministic gameplay intact while loading replaceable world visuals through a fixed per-world asset protocol.

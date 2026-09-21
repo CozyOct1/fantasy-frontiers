@@ -1,5 +1,13 @@
 # Asset Credits
 
+## Current modular fantasy presentation
+
+The current lobby and battlefield use the curated local realm pack. See
+[realm/CREDITS.md](realm/CREDITS.md) for CraftPix OGA-BY 3.0 attribution,
+Kenney / glebster51 CC0 sources, and the documented modifications.
+The legacy packs below remain as compatibility/fallback resources; they are not
+the source of the new castle, towers, or animated enemies.
+
 ## Kenney — Fantasy UI Borders
 
 - Asset: `panel-transparent-border-000.png` (fantasy panel frame)

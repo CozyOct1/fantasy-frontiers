@@ -5,7 +5,7 @@ import registryData from "../../../../assets/library/THEME_REGISTRY.json";
 
 const manifest = assetManifestSchema.parse(manifestData);
 const registry = themeRegistrySchema.parse(registryData);
-const files = import.meta.glob(["../../../../assets/library/border-outpost/runtime/*.png", "../../../../assets/library/neutral/runtime/*.png"], { eager: true, query: "?url", import: "default" }) as Record<string, string>;
+const files = import.meta.glob(["../../../../assets/library/border-outpost/runtime/*.png", "../../../../assets/library/neutral/runtime/*.png", "../../../../assets/library/realm/runtime/*.png"], { eager: true, query: "?url", import: "default" }) as Record<string, string>;
 const byPath = new Map(Object.entries(files).map(([path, url]) => [path.slice(path.indexOf("assets/library/")), url]));
 const byId = new Map(manifest.assets.map(asset => [asset.id, byPath.get(asset.path)]));
 

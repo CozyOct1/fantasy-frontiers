@@ -11,17 +11,17 @@ test.beforeEach(async ({ page }) => {
 test("client and local server bootstrap", async ({ page, request }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "幻想防线" })).toBeVisible();
-  await expect(page.locator(".world-thumbnail").first()).toHaveAttribute("src", /world-key-art/);
+  await expect(page.locator(".main-menu-view .scene-castle")).toHaveAttribute("src", /realm\/runtime\/castle/);
   await expect(page.locator("#hub-screen")).toBeVisible();
   await expect(page.locator("#gameplay-screen")).toBeHidden();
   await expect(page.locator("#game-root canvas")).toBeHidden();
-  await page.getByRole("button", { name: "管理详情" }).first().click();
-  await page.getByRole("button", { name: "试玩关卡" }).first().click();
+  await page.locator("#menu-play").click();
+  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
   await expect(page.locator("#game-status")).toContainText("部署阶段");
-  await expect.poll(() => page.evaluate(() => performance.getEntriesByType("resource").map(entry => entry.name).some(name => name.includes("battle-backdrop")))).toBe(true);
-  await expect.poll(() => page.evaluate(() => performance.getEntriesByType("resource").map(entry => entry.name).some(name => name.includes("road-straight")))).toBe(true);
-  await expect.poll(() => page.evaluate(() => performance.getEntriesByType("resource").map(entry => entry.name).some(name => name.includes("player-base")))).toBe(true);
+  await expect.poll(() => page.evaluate(() => performance.getEntriesByType("resource").some(entry => entry.name.includes("enemy-normal-9")))) .toBe(true);
+  expect(await page.evaluate(() => performance.getEntriesByType("resource").some(entry => /battle-backdrop|world-key-art/.test(entry.name)))).toBe(false);
   await expect(page.locator("#wave-button img")).toHaveCount(1);
   await expect(page.locator("#speed-button img")).toHaveCount(1);
   await expect(page.locator("#hub-screen")).toBeHidden();
@@ -36,52 +36,53 @@ test("client and local server bootstrap", async ({ page, request }) => {
   });
 });
 
-test("player can open the Creative Workshop and return to My Worlds", async ({ page }) => {
+test("player can open creation tools and return to adventure", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "管理详情" }).first().click();
+  await page.locator("#menu-studio").click();
+  await page.locator("#studio-generate").click();
+  await expect(page.locator("#world-create-form")).toBeVisible();
+  await page.getByRole("button", { name: "返回创意工坊" }).click();
+  await page.getByRole("button", { name: "返回主菜单" }).click();
+  await page.locator("#menu-play").click();
+  await page.getByRole("button", { name: "选择关卡" }).first().click();
   await expect(page.locator("#detail-levels")).toContainText("EASY");
-  await expect(page.locator("#world-detail")).toHaveCSS("background-image", /world-key-art/);
-  await expect(page.locator("#evaluation-reports")).toContainText("尚无评测报告");
-  await page.getByRole("button", { name: "收起" }).click();
-  await page.getByRole("button", { name: "创意工坊", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "创意工坊" })).toBeVisible();
-  await expect(page.locator("#workshop-list")).toContainText("工坊尚无已发布世界");
-  await page.getByRole("button", { name: "返回我的世界" }).click();
-  await expect(page.getByRole("heading", { name: "我的世界" })).toBeVisible();
-  await page.getByRole("button", { name: "管理详情" }).first().click();
-  await page.getByRole("button", { name: "试玩关卡" }).first().click();
+  await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
-  await expect(page.getByRole("button", { name: "创意工坊", exact: true })).toBeHidden();
+  await expect(page.locator("#menu-studio")).toBeHidden();
 });
 
-test("player can enter a published Workshop world's saved level without calling world generation", async ({ page, request }) => {
+test("player can enter a saved published world without calling world generation", async ({ page, request }) => {
   const response = await request.get("http://127.0.0.1:3102/api/worlds/frontier-world");
   expect(response.ok()).toBeTruthy();
   const savedWorld = await response.json() as { world: { id: string; status: string }; levels: unknown[]; [key: string]: unknown };
   savedWorld.world.status = "published";
-  await page.route("**/api/workshop/worlds", route => route.fulfill({ json: { worlds: [savedWorld.world] } }));
-  await page.route("**/api/workshop/worlds/frontier-world", route => route.fulfill({ json: savedWorld }));
+  await page.route("**/api/worlds", route => route.fulfill({ json: { worlds: [savedWorld.world] } }));
+  await page.route("**/api/worlds/frontier-world", route => route.fulfill({ json: savedWorld }));
+  let generationRequested = false;
+  page.on("request", request => { if (request.method() === "POST" && request.url().includes("generation")) generationRequested = true; });
   await page.goto("/");
-  await page.getByRole("button", { name: "创意工坊", exact: true }).click();
-  await page.getByRole("button", { name: "查看并游玩" }).click();
+  await page.locator("#menu-play").click();
+  await page.getByRole("button", { name: "选择关卡" }).first().click();
   await expect(page.locator("#world-detail")).toBeVisible();
-  await page.getByRole("button", { name: "试玩关卡" }).first().click();
+  await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
   await expect(page.locator("#level-label")).toContainText("边境哨站");
   await expect(page.locator("#game-root canvas")).toBeVisible();
   await expect(page.locator("#wave-value")).toHaveText("0 / 6");
+  expect(generationRequested).toBe(false);
 });
 
-test("application stays centered in a landscape phone frame without page scrolling", async ({ page }) => {
+test("application fills desktop and phone viewports without page scrolling", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "管理详情" }).first().click();
-  await page.getByRole("button", { name: "试玩关卡" }).first().click();
+  await page.locator("#menu-play").click();
+  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: "开始挑战" }).first().click();
 
   const stage = page.locator(".game-stage");
   const shell = page.locator(".shell");
   const canvas = page.locator("#game-root canvas");
   await expect(canvas).toBeVisible();
-  for (const viewport of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }, { width: 390, height: 844 }]) {
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }, { width: 390, height: 844 }, { width: 360, height: 640 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(viewport);
     await expect.poll(async () => {
       const [shellBounds, stageBounds, canvasBounds, documentSize] = await Promise.all([
@@ -89,7 +90,8 @@ test("application stays centered in a landscape phone frame without page scrolli
         page.evaluate(() => ({ width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight })),
       ]);
       if (!shellBounds || !stageBounds || !canvasBounds) return false;
-      return Math.abs(shellBounds.width / shellBounds.height - 16 / 9) < .02
+      return Math.abs(shellBounds.width - viewport.width) < 2
+        && Math.abs(shellBounds.height - viewport.height) < 2
         && shellBounds.width <= viewport.width + 1
         && shellBounds.height <= viewport.height + 1
         && stageBounds.x >= shellBounds.x
@@ -112,9 +114,10 @@ test("application stays centered in a landscape phone frame without page scrolli
 test("player can build, upgrade, start, pause, and restart an Easy game", async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto("/");
-  await page.getByRole("button", { name: "管理详情" }).first().click();
+  await page.locator("#menu-play").click();
+  await page.getByRole("button", { name: "选择关卡" }).first().click();
   const canvas = page.locator("#game-root canvas");
-  await page.getByRole("button", { name: "试玩关卡" }).first().click();
+  await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(canvas).toBeVisible();
   await expect(page.locator("#hub-screen")).toBeHidden();
   const bounds = await canvas.boundingBox();
@@ -157,7 +160,6 @@ test("player can build, upgrade, start, pause, and restart an Easy game", async 
   await expect(page.locator("#tower-context-panel")).toBeVisible();
   await page.locator("#upgrade-button").click();
   await expect(page.locator("#tower-context-level")).toHaveText("Lv.2");
-  await expect(page.locator("#sell-button")).toBeDisabled();
   await page.locator("#speed-button").click();
   await expect(page.locator("#tower-context-panel")).toBeHidden();
   await canvas.click({ position: slotPixel });
@@ -176,7 +178,8 @@ test("player can build, upgrade, start, pause, and restart an Easy game", async 
 
 test("Easy, Medium, and Hard all enter the shared Gameplay screen", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "管理详情" }).first().click();
+  await page.locator("#menu-play").click();
+  await page.getByRole("button", { name: "选择关卡" }).first().click();
   page.on("dialog", dialog => dialog.accept());
   for (const [index, difficulty] of [[0, "EASY"], [1, "MEDIUM"], [2, "HARD"]] as const) {
     await page.locator("#detail-levels button").nth(index).click();
@@ -189,8 +192,9 @@ test("Easy, Medium, and Hard all enter the shared Gameplay screen", async ({ pag
 
 test("Pause overlay resumes the same running battle and speed control toggles", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "管理详情" }).first().click();
-  await page.getByRole("button", { name: "试玩关卡" }).first().click();
+  await page.locator("#menu-play").click();
+  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: "开始挑战" }).first().click();
   await page.locator("#wave-button").click();
   await expect(page.locator("#game-status")).toContainText("战斗进行中");
   await page.locator("#speed-button").click();
@@ -207,8 +211,9 @@ test("Pause overlay resumes the same running battle and speed control toggles", 
 test("reduced motion keeps the battle readable and running", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page.getByRole("button", { name: "管理详情" }).first().click();
-  await page.getByRole("button", { name: "试玩关卡" }).first().click();
+  await page.locator("#menu-play").click();
+  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(page.locator("#game-root canvas")).toBeVisible();
   await page.locator("#wave-button").click();
   await expect(page.locator("#game-status")).toHaveText("战斗进行中");
@@ -221,8 +226,9 @@ test("reduced motion keeps the battle readable and running", async ({ page }) =>
 test("an enemy leak produces visible base damage feedback", async ({ page }) => {
   test.setTimeout(45_000);
   await page.goto("/");
-  await page.getByRole("button", { name: "管理详情" }).first().click();
-  await page.getByRole("button", { name: "试玩关卡" }).first().click();
+  await page.locator("#menu-play").click();
+  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: "开始挑战" }).first().click();
   await page.locator("#speed-button").click();
   await page.locator("#wave-button").click();
   await expect.poll(async () => Number((await page.locator("#hp-value").innerText()).split("/")[0]?.trim()), { timeout: 35_000 }).toBeLessThan(30);

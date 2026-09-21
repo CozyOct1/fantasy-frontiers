@@ -15,8 +15,9 @@ test("production subpath loads its assets, API data, and Phaser canvas", async (
   });
   await page.goto("http://127.0.0.1:4173/fantasy-frontiers/");
   await expect(page.getByRole("heading", { name: "幻想防线" })).toBeVisible();
-  await page.getByRole("button", { name: "管理详情" }).first().click();
-  await page.getByRole("button", { name: "试玩关卡" }).first().click();
+  await page.locator("#menu-play").click();
+  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(page.locator("#game-root canvas")).toBeVisible();
   await expect(page.locator("#wave-button img")).toHaveCount(1);
   expect(failedResponses).toEqual([]);

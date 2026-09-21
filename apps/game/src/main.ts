@@ -6,19 +6,21 @@ import { ScreenFlow, type AppScreen } from "./app/screen-flow";
 import { createBoardProjection, type BoardProjection } from "./game/board-projection";
 import { createGameplayController, type GameplayController } from "./game/gameplay-controller";
 import { resolveWorldSkin } from "./presentation/world-skin-resolver";
-import { getLocalGameAssetKey, getLocalGameAssetUrl, getPresentationAssets } from "./presentation/local-game-assets";
+import { getLocalGameAssetKey, getLocalGameAssetUrl } from "./presentation/local-game-assets";
 import { createDecorationPlacements } from "./presentation/deterministic-decoration";
 import { createRoadConnectionMap, ROAD_DIRECTION_OFFSETS } from "./presentation/road-renderer";
 import { ENEMY_WORLD_ASSET_BY_ARCHETYPE, TOWER_WORLD_ASSET_BY_ARCHETYPE, resolveWorldAssets, type ResolvedWorldAssets, type WorldAssetName } from "./presentation/world-asset-registry";
 import { WORLD_VISUAL_DEPTH } from "./presentation/world-asset-render-config";
 import { footprintDiamond, getIsometricPlacement, placeIsometricSprite, type IsometricPlacement } from "./presentation/isometric-render-contract";
 import { mountAssetCalibrationPage } from "./presentation/asset-calibration-scene";
+import { createFantasyScene, prefersReducedMotion } from "./presentation/fantasy-scene";
+import { ENEMY_ANIMATION_FRAMES, ENEMY_ANIMATION_FRAME_MS } from "./presentation/fantasy-asset-config";
 import "./style.css";
 
 const difficultySeeds: Record<Difficulty, number> = { easy: 70421, medium: 70422, hard: 70423 };
 const debugRenderMode = new URLSearchParams(window.location.search).get("debugRender") === "1";
 const assetCalibrationMode = window.location.pathname.endsWith("/dev/assets") || new URLSearchParams(window.location.search).get("assetCalibration") === "1";
-const difficultyNames: Record<Difficulty, string> = { easy: "Easy", medium: "Medium", hard: "Hard" };
+const difficultyNames: Record<Difficulty, string> = { easy: "简单", medium: "普通", hard: "困难" };
 const defaultTowerNames: Record<TowerArchetype, string> = { basic: "弩塔", aoe: "爆裂塔", slow: "霜缚塔", heavy: "重炮塔" };
 function createDemoMap(difficulty: Difficulty): MapSpec {
   const generated = generateMap({ difficulty, seed: difficultySeeds[difficulty] });
@@ -71,7 +73,8 @@ function resizeGameToStage(): void {
 }
 
 document.querySelectorAll<HTMLImageElement>("img[data-asset-id]").forEach(image => {
-  const url = getLocalGameAssetUrl(image.dataset.assetId ?? "");
+  const id = image.dataset.assetId ?? "";
+  const url = getLocalGameAssetUrl(id.includes(".tower-") ? id.replace("ff.border-outpost.", "ff.realm.") : id);
   if (url) image.src = url;
 });
 
@@ -264,28 +267,32 @@ async function refreshWorldLibrary(): Promise<void> {
       const { world, detail } = entry;
       knownWorlds.set(world.id, { spec: world, levels: detail.levels, evaluations: detail.evaluations ?? [], readiness: detail.readiness ?? null, ...(detail.skin ? { skin: detail.skin } : {}), ...(detail.towerTheme ? { towerTheme: detail.towerTheme } : {}), ...(detail.enemyTheme ? { enemyTheme: detail.enemyTheme } : {}) });
       const card = document.createElement("article"); card.className = "world-card";
-      const thumbnail = document.createElement("img"); thumbnail.className = "world-thumbnail"; thumbnail.alt = `${world.name}世界封面`;
-      const worldAssets = resolveWorldAssets(detail.skin?.assetWorldId ?? world.id);
-      thumbnail.src = worldAssets.worldKeyArtUrl;
-      thumbnail.style.objectPosition = `${worldAssets.manifest.keyArt.focalX * 100}% ${worldAssets.manifest.keyArt.focalY * 100}%`;
+      const thumbnail = document.createElement("div"); thumbnail.className = "world-thumbnail";
+      thumbnail.setAttribute("role", "img"); thumbnail.setAttribute("aria-label", `${world.name}世界封面`);
+      const variant = ["nature", "ocean", "sci_fi"].includes(world.themeFamily) ? 1 : ["dark_fantasy", "steampunk"].includes(world.themeFamily) ? 2 : 0;
+      thumbnail.append(createFantasyScene(true, variant));
       const copy = document.createElement("div");
       const title = document.createElement("strong"); title.textContent = world.name;
-      const summary = document.createElement("span"); summary.textContent = `${world.summary} · ${world.status}`;
+      const summary = document.createElement("span"); summary.textContent = world.summary;
       copy.append(title, summary);
+      const completed = detail.levels.filter(level => progress.some(record => record.levelId === level.id && record.completed)).length;
+      const completion = document.createElement("div"); completion.className = "progress-caption";
+      completion.textContent = `战役进度 · ${completed} / ${detail.levels.length} 关`;
+      const meter = document.createElement("progress"); meter.max = Math.max(1, detail.levels.length); meter.value = completed;
+      meter.setAttribute("aria-label", `${world.name}完成进度`);
+      copy.append(completion, meter);
       const levels = document.createElement("div"); levels.className = "world-progress";
       for (const level of detail.levels) {
         const record = progress.find(progressEntry => progressEntry.levelId === level.id);
         const badge = document.createElement("span");
         badge.className = record?.completed ? "complete" : record?.unlocked ? "unlocked" : "locked";
-        badge.textContent = `${level.difficulty.toUpperCase()} ${record?.completed ? "✓" : record?.unlocked ? "可玩" : "锁定"}`;
+        badge.textContent = `${difficultyNames[level.difficulty]} ${record?.completed ? "✓" : record?.unlocked ? "可玩" : "锁定"}`;
         levels.append(badge);
       }
-      const select = document.createElement("button"); select.className = "world-select"; select.type = "button"; select.textContent = world.id === currentWorldId ? "使用中" : "进入";
-      select.disabled = world.status !== "ready" && world.status !== "generated" && world.status !== "published";
-      select.addEventListener("click", () => void prepareWorld(world.id).then(ready => { if (ready) renderWorldDetail(world.id); }));
       const detailButton = document.createElement("button"); detailButton.className = "world-select"; detailButton.type = "button"; detailButton.textContent = "选择关卡";
+      detailButton.disabled = world.status !== "ready" && world.status !== "generated" && world.status !== "published";
       detailButton.addEventListener("click", () => void prepareWorld(world.id).then(ready => { if (ready) renderWorldDetail(world.id); }));
-      const actions = document.createElement("div"); actions.className = "world-card-actions"; actions.append(select, detailButton);
+      const actions = document.createElement("div"); actions.className = "world-card-actions"; actions.append(detailButton);
       card.append(thumbnail, copy, levels, actions); ui.worldList.append(card);
     }
     renderWorkshop(workshopData.worlds);
@@ -335,10 +342,7 @@ function renderWorldDetail(worldId: string): void {
   ui.worldList.hidden = true;
   ui.detailTitle.dataset.worldId = worldId;
   ui.detailTitle.textContent = known.spec.name;
-  const worldAssets = resolveWorldAssets(known.skin?.assetWorldId ?? worldId);
-  ui.detail.style.setProperty("--world-key-art", `url(${JSON.stringify(worldAssets.worldKeyArtUrl)})`);
-  ui.detail.style.setProperty("--world-key-position", `${worldAssets.manifest.keyArt.focalX * 100}% ${worldAssets.manifest.keyArt.focalY * 100}%`);
-  ui.detailSummary.textContent = `${known.spec.summary} · 状态：${known.spec.status}`;
+  ui.detailSummary.textContent = known.spec.summary;
   ui.detailLevels.replaceChildren();
   for (const difficulty of ["easy", "medium", "hard"] as const) {
     const level = known.levels.find(candidate => candidate.difficulty === difficulty);
@@ -435,7 +439,6 @@ async function prepareWorld(worldId: string, difficulty = currentDifficulty): Pr
   });
   currentSkin = resolveWorldSkin(world.spec.themeFamily, world.skin);
   currentWorldAssets = resolveWorldAssets(world.skin?.assetWorldId ?? worldId);
-  document.documentElement.style.setProperty("--battle-backdrop", `url(${JSON.stringify(currentWorldAssets.battleBackdropUrl)})`);
   document.documentElement.dataset.themeFamily = world.spec.themeFamily;
   document.documentElement.dataset.themePack = currentSkin.packId;
   document.documentElement.style.setProperty("--theme-primary", currentSkin.skin.colors.primary);
@@ -577,9 +580,13 @@ function consumeBattleEvents(events: readonly GameEvent[]): void {
       showFeedback("防御塔部署成功 · ✦", "gain");
       boardScene?.showPlacementEffect(event.position);
     }
+    else if (event.type === "towerUpgraded") {
+      const tower = engine.state.towers.find(item => item.id === event.towerId);
+      if (tower) boardScene?.showUpgradeEffect(tower.position, event.level);
+      showFeedback(`升级完成 · Lv.${event.level}`);
+    }
     else if (event.type === "towerFired") boardScene?.showProjectile(event);
     else if (event.type === "enemyKilled") {
-      showFeedback(`击破 · +${event.reward} 金币`, "gain");
       boardScene?.showDeathEffect(event.position, event.reward);
     }
     else if (event.type === "enemyLeaked") {
@@ -698,7 +705,6 @@ function renderHud(): void {
 }
 
 class BoardScene extends Phaser.Scene {
-  private backdropSprite: Phaser.GameObjects.Image | null = null;
   private terrain!: Phaser.GameObjects.Graphics;
   private roads!: Phaser.GameObjects.Graphics;
   private dynamic!: Phaser.GameObjects.Graphics;
@@ -706,6 +712,7 @@ class BoardScene extends Phaser.Scene {
   private shotEvents: Extract<GameEvent, { type: "towerFired" }>[] = [];
   private projection!: BoardProjection;
   private terrainSprites: Phaser.GameObjects.Image[] = [];
+  private mapLabels: Phaser.GameObjects.Text[] = [];
   private entitySprites = new Map<string, Phaser.GameObjects.Image>();
   private hoverCell: Coordinate | null = null;
   private activeProjectileCount = 0;
@@ -722,17 +729,12 @@ class BoardScene extends Phaser.Scene {
   constructor() { super("board"); }
 
   preload(): void {
-    const pack = getPresentationAssets(currentSkin.packId);
-    const ids = pack?.terrainTileIds ?? [];
-    for (const id of ids) {
+    for (const id of ["ff.neutral.tower", "ff.neutral.enemy"]) {
       const url = getLocalGameAssetUrl(id);
       const key = getLocalGameAssetKey(id);
-      if (url && key && !this.textures.exists(key)) this.load.image(key, url);
+      if (url && key) this.load.image(key, url);
     }
-    for (const id of ["ff.neutral.tower", "ff.neutral.enemy"]) {
-      const url = getLocalGameAssetUrl(id); const key = getLocalGameAssetKey(id);
-      if (url && key && !this.textures.exists(key)) this.load.image(key, url);
-    }
+    this.queueWorldTextures(currentWorldAssets);
   }
 
   create(): void {
@@ -743,11 +745,10 @@ class BoardScene extends Phaser.Scene {
     this.dynamic = this.add.graphics().setDepth(WORLD_VISUAL_DEPTH.indicator);
     this.shots = this.add.graphics().setDepth(WORLD_VISUAL_DEPTH.projectile);
     if (debugRenderMode) this.debugGraphics = this.add.graphics().setDepth(WORLD_VISUAL_DEPTH.debug);
-    this.syncBackdrop();
     this.layoutBoard();
-    this.scale.on(Phaser.Scale.Events.RESIZE, this.layoutBoard, this);
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.refreshWorldVisuals, this);
     this.drawTerrain();
-    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => this.onBoardClick(pointer.x, pointer.y));
+    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => this.onBoardClick(pointer.x, pointer.y, pointer.wasTouch));
     this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
       const next = this.projection.cellAt({ x: pointer.x, y: pointer.y });
       if (next?.x === this.hoverCell?.x && next?.y === this.hoverCell?.y) return;
@@ -756,14 +757,13 @@ class BoardScene extends Phaser.Scene {
     });
     this.renderState();
     renderHud();
-    // World packs can be several megabytes over a public connection. Do not
-    // block Scene creation on them: render the deterministic fallback board
-    // first, then replace its visuals once the themed pack has finished.
-    this.loadWorldTextures(currentWorldAssets);
+    // Subsequent world changes resolve to the same approved local visual family.
   }
 
   update(time: number, delta: number): void {
+    if (screenFlow.current !== "gameplay") return;
     this.sceneClock = time;
+    this.tweens.timeScale = engine.state.status === "paused" ? 0 : 1;
     if (engine.state.status !== "running") {
       if (engine.state.status === "ready") this.renderState();
       if (engine.state.status !== "paused") this.animateLandmarks(time);
@@ -847,7 +847,6 @@ class BoardScene extends Phaser.Scene {
   }
 
   private refreshWorldVisuals(): void {
-    this.syncBackdrop();
     this.layoutBoard();
     this.drawTerrain();
     this.renderState();
@@ -855,10 +854,16 @@ class BoardScene extends Phaser.Scene {
 
   private queueWorldTextures(assets: ResolvedWorldAssets): boolean {
     let queued = false;
-    const entries: [string, string][] = [[`world-${assets.resolvedWorldId}-battleBackdrop`, assets.battleBackdropUrl]];
+    const entries: [string, string][] = [];
     for (const name of Object.keys(assets.manifest.assets) as WorldAssetName[]) {
       if (name.startsWith("road")) continue;
       entries.push([assets.textureKey(name), assets.assetUrl(name)]);
+    }
+    for (const archetype of ["normal", "fast", "tank", "boss"]) {
+      for (let frame = 0; frame < ENEMY_ANIMATION_FRAMES; frame++) {
+        const url = getLocalGameAssetUrl(`ff.realm.enemy-${archetype}-${frame}`);
+        if (url) entries.push([`realm-enemy-${archetype}-${frame}`, url]);
+      }
     }
     for (const [key, url] of entries) {
       if (this.textures.exists(key)) continue;
@@ -866,19 +871,6 @@ class BoardScene extends Phaser.Scene {
       queued = true;
     }
     return queued;
-  }
-
-  private syncBackdrop(): void {
-    const key = `world-${currentWorldAssets.resolvedWorldId}-battleBackdrop`;
-    if (!this.textures.exists(key)) return;
-    if (!this.backdropSprite) this.backdropSprite = this.add.image(this.scale.width / 2, this.scale.height / 2, key).setDepth(WORLD_VISUAL_DEPTH.backdrop).setScrollFactor(0);
-    else this.backdropSprite.setTexture(key);
-    const source = this.textures.get(key).getSourceImage() as { width: number; height: number };
-    const scale = Math.max(this.scale.width / source.width, this.scale.height / source.height);
-    this.backdropSprite.setPosition(this.scale.width / 2, this.scale.height / 2)
-      .setDisplaySize(source.width * scale, source.height * scale)
-      .setTint(this.color(currentWorldAssets.manifest.battlefieldPalette.ambientTint))
-      .setAlpha(.72);
   }
 
   positionTowerContext(point: Coordinate): void {
@@ -891,20 +883,32 @@ class BoardScene extends Phaser.Scene {
   }
 
   showPlacementEffect(point: Coordinate): void {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (prefersReducedMotion()) return;
     const center = this.project(point);
-    const ring = this.add.ellipse(center.x, center.y - 3, 20, 12, this.color(currentSkin.skin.colors.accent), 0.72);
+    const ring = this.add.ellipse(center.x, center.y - 3, 20, 12, 0xffd275, 0.72).setDepth(WORLD_VISUAL_DEPTH.indicator);
     this.tweens.add({ targets: ring, scaleX: 2.2, scaleY: 2.4, alpha: 0, duration: 320, ease: "Back.Out", onComplete: () => ring.destroy() });
   }
 
+  showUpgradeEffect(point: Coordinate, level: number): void {
+    this.showPlacementEffect(point);
+    if (prefersReducedMotion()) return;
+    const center = this.project(point);
+    for (let i = 0; i < 8; i++) {
+      const spark = this.add.star(center.x, center.y - 12, 4, 2, 5, 0xffe0a0).setDepth(WORLD_VISUAL_DEPTH.indicator);
+      this.tweens.add({ targets: spark, x: center.x + Math.cos(i * Math.PI / 4) * 32, y: center.y - 35 + Math.sin(i * Math.PI / 4) * 25, alpha: 0, duration: 650, delay: i * 25, onComplete: () => spark.destroy() });
+    }
+    const label = this.add.text(center.x, center.y - 45, `↑ Lv.${level}`, { color: "#ffe6a4", fontSize: "17px", stroke: "#283929", strokeThickness: 4 }).setOrigin(.5).setDepth(WORLD_VISUAL_DEPTH.indicator);
+    this.tweens.add({ targets: label, y: center.y - 80, alpha: 0, duration: 900, onComplete: () => label.destroy() });
+  }
+
   showDeathEffect(point: Coordinate, reward: number): void {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (prefersReducedMotion()) return;
     const center = this.project(point);
     for (let index = 0; index < 5; index += 1) {
       if (this.activeDeathParticles >= this.maxDeathParticles) break;
       this.activeDeathParticles += 1;
       const angle = index * (Math.PI * 2 / 5);
-      const spark = this.add.circle(center.x, center.y - 5, 2.5, 0xffd27a, 0.95);
+      const spark = this.add.circle(center.x, center.y - 5, 2.5, 0xffd27a, 0.95).setDepth(WORLD_VISUAL_DEPTH.indicator);
       this.tweens.add({
         targets: spark,
         x: center.x + Math.cos(angle) * 15,
@@ -923,14 +927,14 @@ class BoardScene extends Phaser.Scene {
   }
 
   showHitEffect(point: Coordinate, targetId?: string): void {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (prefersReducedMotion()) return;
     const center = this.project(point);
     const target = targetId ? this.entitySprites.get(targetId) : undefined;
     if (target) {
       target.setTintFill(0xffffff);
       window.setTimeout(() => { if (target.active) target.clearTint(); }, 85);
     }
-    const flash = this.add.ellipse(center.x, center.y - 5, 13, 10, 0xffefd0, 0.72);
+    const flash = this.add.ellipse(center.x, center.y - 5, 13, 10, 0xffefd0, 0.72).setDepth(WORLD_VISUAL_DEPTH.indicator);
     this.tweens.add({ targets: flash, scaleX: 0.35, scaleY: 0.35, alpha: 0, duration: 105, onComplete: () => flash.destroy() });
   }
 
@@ -945,7 +949,7 @@ class BoardScene extends Phaser.Scene {
   }
 
   showWaveStartEffect(): void {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (prefersReducedMotion()) return;
     for (const spawn of currentMap.spawns) {
       const center = this.project(spawn.position);
       const ring = this.add.ellipse(center.x, center.y, this.projection.tileWidth * .42, this.projection.tileHeight * .34, 0xc250d8, .58).setDepth(WORLD_VISUAL_DEPTH.indicator);
@@ -954,7 +958,7 @@ class BoardScene extends Phaser.Scene {
   }
 
   showBaseHitEffect(): void {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (prefersReducedMotion()) {
       this.baseSprite?.setTint(0xffb0a4);
       window.setTimeout(() => this.baseSprite?.clearTint(), 140);
       return;
@@ -967,7 +971,7 @@ class BoardScene extends Phaser.Scene {
   }
 
   private animateLandmarks(time: number): void {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (prefersReducedMotion()) return;
     const pulse = 1 + Math.sin(time / 420) * .035;
     for (const rift of this.riftSprites) {
       const baseScaleX = Number(rift.getData("baseScaleX") ?? rift.scaleX);
@@ -983,7 +987,6 @@ class BoardScene extends Phaser.Scene {
   }
 
   private layoutBoard(): void {
-    this.syncBackdrop();
     const stage = document.querySelector<HTMLElement>("#game-root")?.getBoundingClientRect();
     const header = document.querySelector<HTMLElement>(".gameplay-header")?.getBoundingClientRect();
     const controls = document.querySelector<HTMLElement>(".control-panel")?.getBoundingClientRect();
@@ -1020,6 +1023,8 @@ class BoardScene extends Phaser.Scene {
     this.terrain.clear();
     this.roads.clear();
     for (const sprite of this.terrainSprites) sprite.destroy();
+    for (const label of this.mapLabels) label.destroy();
+    this.mapLabels = [];
     this.terrainSprites = [];
     this.riftSprites = [];
     this.baseSprite = null;
@@ -1064,7 +1069,7 @@ class BoardScene extends Phaser.Scene {
             const emphasis = selected ? 1.08 : hovered ? 1.05 : 1;
             const slot = this.add.image(center.x, center.y, slotKey)
               .setOrigin(metadata.originX, metadata.originY)
-              .setDisplaySize(this.projection.tileWidth * metadata.scale * emphasis, this.projection.tileHeight * metadata.scale * emphasis)
+              .setDisplaySize(Math.max(26, this.projection.tileWidth * metadata.scale) * emphasis, Math.max(18, this.projection.tileHeight * metadata.scale) * emphasis)
               .setTint(selected || hovered ? 0xffe18c : actionable && affordable ? 0xd8ba65 : actionable ? 0x5c5d56 : occupied ? 0x565b54 : 0x8a8169)
               .setAlpha(actionable && affordable ? .94 : occupied ? .28 : actionable ? .42 : .76)
               .setDepth(WORLD_VISUAL_DEPTH.buildSlot);
@@ -1072,6 +1077,7 @@ class BoardScene extends Phaser.Scene {
             slot.setData("buildSlotBaseAlpha", slot.alpha);
             this.terrainSprites.push(slot);
             if (!occupied) {
+              this.mapLabels.push(this.add.text(center.x, center.y - 2, "+", { color: selected ? "#fff2a6" : "#f0dcaa", fontSize: "16px", fontStyle: "bold", stroke: "#42573b", strokeThickness: 2 }).setOrigin(.5).setDepth(WORLD_VISUAL_DEPTH.buildSlot + 1));
               this.roads.lineStyle(selected || hovered ? 2 : 1, selected || hovered ? 0xffdf83 : 0xb89d61, selected || hovered ? .9 : .42);
               this.roads.strokeEllipse(center.x, center.y, this.projection.tileWidth * .38 * emphasis, this.projection.tileHeight * .38 * emphasis);
             }
@@ -1079,7 +1085,7 @@ class BoardScene extends Phaser.Scene {
         }
       }
     }
-    const roadWidth = this.projection.tileHeight * .47;
+    const roadWidth = this.projection.tileHeight * .65;
     for (const [key, directions] of roadConnections) {
       const [x, y] = key.split(",").map(Number) as [number, number]; const center = this.project({ x, y });
       this.roads.fillStyle(this.color(palette.roadEdge), 1).fillCircle(center.x, center.y, roadWidth * .62);
@@ -1097,6 +1103,10 @@ class BoardScene extends Phaser.Scene {
       if (directions.length >= 3) this.roads.lineStyle(1.5, this.color(palette.roadEdge), .52).strokeCircle(center.x, center.y, roadWidth * .72);
     }
     const base = this.project(currentMap.base);
+    const marker = (point: Phaser.Math.Vector2, label: string, color: string) => {
+      this.mapLabels.push(this.add.text(point.x, point.y + 10, label, { color, fontSize: "12px", fontStyle: "bold", backgroundColor: "#233c30dd", padding: { x: 7, y: 4 } }).setOrigin(.5, 0).setDepth(WORLD_VISUAL_DEPTH.indicator));
+    };
+    marker(base, "守护城堡", "#fff1b7");
     const baseKey = currentWorldAssets.textureKey("playerBase");
     if (baseKey && this.textures.exists(baseKey)) {
       this.baseSprite = placeIsometricSprite(this.add.image(base.x, base.y, baseKey), getIsometricPlacement(this.projection, currentMap.base, currentWorldAssets.manifest, "playerBase"));
@@ -1105,6 +1115,7 @@ class BoardScene extends Phaser.Scene {
     else { this.terrain.fillStyle(0xc4a868, 1); this.terrain.fillTriangle(base.x - 10, base.y + 2, base.x, base.y - 22, base.x + 10, base.y + 2); }
     for (const spawn of currentMap.spawns) {
       const position = this.project(spawn.position);
+      marker(position, "敌军入口", "#ffd4b2");
       const riftKey = currentWorldAssets.textureKey("enemySpawn");
       if (riftKey && this.textures.exists(riftKey)) {
         const rift = placeIsometricSprite(this.add.image(position.x, position.y, riftKey), getIsometricPlacement(this.projection, spawn.position, currentWorldAssets.manifest, "enemySpawn"));
@@ -1149,7 +1160,7 @@ class BoardScene extends Phaser.Scene {
     }
     if (sprite.texture.key !== key) sprite.setTexture(key);
     placeIsometricSprite(sprite, getIsometricPlacement(this.projection, point, currentWorldAssets.manifest, TOWER_WORLD_ASSET_BY_ARCHETYPE[archetype]));
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!prefersReducedMotion()) {
       const age = Math.max(0, this.sceneClock - Number(sprite.getData("bornAt") ?? this.sceneClock));
       const placementFactor = age < 220 ? .72 + .34 * Math.sin(Math.min(1, age / 220) * Math.PI / 2) : 1;
       const idleFactor = age >= 220 ? 1 + Math.sin(this.sceneClock / 650 + point.x) * .008 : 1;
@@ -1179,18 +1190,21 @@ class BoardScene extends Phaser.Scene {
     const point = { x: from.x + (to.x - from.x) * progress, y: from.y + (to.y - from.y) * progress };
     const center = this.project(point);
     const directionTarget = this.project(to);
-    const idKey = currentWorldAssets.textureKey(ENEMY_WORLD_ASSET_BY_ARCHETYPE[enemy.archetype]);
+    const frame = prefersReducedMotion() ? 0 : Math.floor(this.sceneClock / ENEMY_ANIMATION_FRAME_MS) % ENEMY_ANIMATION_FRAMES;
+    const idKey = `realm-enemy-${enemy.archetype}-${frame}`;
     const key = this.textures.exists(idKey) ? idKey : getLocalGameAssetKey("ff.neutral.enemy") ?? "enemy";
     let sprite = this.entitySprites.get(id);
     if (!sprite) { sprite = this.add.image(center.x, center.y, key); this.entitySprites.set(id, sprite); }
     if (sprite.texture.key !== key) sprite.setTexture(key);
     const assetName = ENEMY_WORLD_ASSET_BY_ARCHETYPE[enemy.archetype];
     const placement = getIsometricPlacement(this.projection, point, currentWorldAssets.manifest, assetName);
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    placement.displayWidth = placement.displayHeight = Math.max(24, placement.displayHeight);
+    const reducedMotion = prefersReducedMotion();
     const bob = reducedMotion ? 0 : Math.sin(this.sceneClock / 105 + Number.parseInt(id.replace(/\D/g, "") || "0", 10)) * 1.6;
     placeIsometricSprite(sprite, placement).setY(placement.groundScreenY + bob).setFlipX(directionTarget.x < center.x);
-    this.dynamic.fillStyle(0x251c1c, 1); this.dynamic.fillRoundedRect(center.x - 9, center.y - 25, 18, 4, 2);
-    this.dynamic.fillStyle(0x92d278, 1); this.dynamic.fillRoundedRect(center.x - 9, center.y - 25, 18 * Math.max(0, enemy.hp / enemy.maxHp), 4, 2);
+    const healthY = center.y - placement.displayHeight * .82;
+    this.dynamic.fillStyle(0x251c1c, 1); this.dynamic.fillRoundedRect(center.x - 12, healthY, 24, 5, 2);
+    this.dynamic.fillStyle(enemy.archetype === "boss" ? 0xffb464 : 0xb6da70, 1); this.dynamic.fillRoundedRect(center.x - 11, healthY + 1, 22 * Math.max(0, enemy.hp / enemy.maxHp), 3, 1);
   }
 
   private drawShots(): void {
@@ -1203,8 +1217,12 @@ class BoardScene extends Phaser.Scene {
     }
   }
 
-  private onBoardClick(screenX: number, screenY: number): void {
-    const point = this.projection.cellAt({ x: screenX, y: screenY });
+  private onBoardClick(screenX: number, screenY: number, touch = false): void {
+    // Expand touch hit areas without changing MapSpec, legal slots, or core rules.
+    const nearestSlot = touch ? currentMap.buildSlots.map(point => ({ point, pixel: this.project(point) }))
+      .map(({ point, pixel }) => ({ point, distance: Math.hypot(pixel.x - screenX, pixel.y - screenY) }))
+      .filter(candidate => candidate.distance <= 22).sort((a, b) => a.distance - b.distance)[0]?.point : undefined;
+    const point = nearestSlot ?? this.projection.cellAt({ x: screenX, y: screenY });
     if (!point) return;
     const tower = engine.state.towers.find(candidate => candidate.position.x === point.x && candidate.position.y === point.y);
     if (tower) {
@@ -1282,9 +1300,8 @@ function populateSettings(): void {
   document.documentElement.classList.toggle("reduce-motion", value.reducedMotion);
 }
 
-const menuAssets = resolveWorldAssets("frontier-outpost");
-document.documentElement.style.setProperty("--menu-key-art", `url(${JSON.stringify(menuAssets.worldKeyArtUrl)})`);
-document.documentElement.style.setProperty("--menu-key-position", `${menuAssets.manifest.keyArt.focalX * 100}% ${menuAssets.manifest.keyArt.focalY * 100}%`);
+document.querySelector(".main-menu-view")!.prepend(createFantasyScene());
+document.documentElement.style.setProperty("--fantasy-frame", `url("${getLocalGameAssetUrl("ff.realm.panel")}")`);
 populateSettings();
 
 document.querySelectorAll<HTMLButtonElement>("[data-archetype]").forEach(button => {

@@ -15,8 +15,9 @@ test("complete an Easy campaign run, persist its outcome, reload progress, and r
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "幻想防线" })).toBeVisible();
   await expect(page.locator("#hub-screen")).toBeVisible();
-  await page.getByRole("button", { name: "管理详情" }).first().click();
-  await page.getByRole("button", { name: "试玩关卡" }).first().click();
+  await page.locator("#menu-play").click();
+  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
   await expect(page.locator("#hub-screen")).toBeHidden();
   await expect(page.locator("#game-root canvas")).toBeVisible();
@@ -106,8 +107,7 @@ test("complete an Easy campaign run, persist its outcome, reload progress, and r
   await expect(page.locator("#hub-screen")).toBeVisible();
   await expect(page.locator("#world-detail")).toBeVisible();
   inputTrace.push("Returned from the result to the current world's detail in the Hub.");
-  await page.getByRole("button", { name: "Easy", exact: true }).click();
-  await page.getByRole("button", { name: "开始关卡" }).click();
+  await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
   await expect(page.locator("#game-status")).toHaveText("部署阶段");
   await expect(page.locator("#wave-value")).toHaveText("0 / 6");
@@ -117,7 +117,8 @@ test("complete an Easy campaign run, persist its outcome, reload progress, and r
 
   await page.reload();
   await expect(page.getByRole("heading", { name: "幻想防线" })).toBeVisible();
-  await expect(page.locator(".world-progress")).toContainText(terminal.includes("防线守住了") ? "EASY ✓" : "EASY 可玩");
+  await page.locator("#menu-play").click();
+  await expect(page.locator(".world-progress")).toContainText(terminal.includes("防线守住了") ? "简单 ✓" : "简单 可玩");
   await expect.poll(async () => {
     const response = await request.get(`${api}/api/progress?playerId=local-player`);
     expect(response.ok()).toBeTruthy();

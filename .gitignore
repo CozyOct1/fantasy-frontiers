@@ -15,3 +15,13 @@ data/*.sqlite
 data/*.sqlite-*
 *.log
 .DS_Store
+# Downloaded research/source archives; only curated runtime files are shipped.
+assets/library/fantasy-frontiers/
+assets/library/fantasy-frontiers-td/
+assets/library/fantasy-frontiers-td-source/
+assets/library/data-workspace-fantasy-frontiers-assets-library-fantasy-frontiers-td-source/
+assets/library/small-rts/
+assets/library/small-rts-source/
+assets/library/craftpix-source/
+assets/library/realm/*-source.png
+.playwright-mcp/

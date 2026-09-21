@@ -2,29 +2,32 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#111a1b" />
-    <title>幻想防线 · 边境哨站</title>
+    <title>幻想防线 · 守望者营地</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23e8bc63' d='M5 4h22v16L16 29 5 20z'/%3E%3Cpath fill='%23263a35' d='M14 9h4v12h-4zM10 13h12v4H10z'/%3E%3C/svg%3E" />
   </head>
   <body>
     <main class="shell">
       <section id="hub-screen" data-app-screen="hub" aria-label="主菜单">
         <section class="hub-view main-menu-view" data-hub-view="menu" aria-label="游戏主菜单">
+          <div class="lobby-topline"><span>✦ 守望者营地</span><button class="settings-control" id="menu-settings" type="button" aria-label="游戏设置">⚙</button></div>
           <div class="main-menu-copy">
-            <p class="eyebrow">FANTASY FRONTIERS</p>
+            <p class="eyebrow">✦ FANTASY FRONTIERS ✦</p>
             <h1>幻想防线</h1>
-            <p class="main-menu-subtitle">守住每一个由想象创造的世界</p>
+            <p class="main-menu-subtitle">小小防线，无尽奇境</p>
+            <p class="lobby-story">远方的号角已经响起。<br />筑起高塔，让怪物们绕点远路。</p>
             <nav class="main-menu-actions" aria-label="主菜单选项">
-              <button class="menu-button primary" id="menu-play" type="button">开始游戏</button>
-              <button class="menu-button" id="menu-studio" type="button">创意工坊</button>
-              <button class="menu-button" id="menu-settings" type="button">游戏设置</button>
+              <button class="menu-button primary" id="menu-play" type="button"><span aria-hidden="true">⚔</span> 开始冒险 <span aria-hidden="true">›</span></button>
+              <button class="menu-button" id="menu-studio" type="button"><span aria-hidden="true">✦</span> 创意工坊 <small>AI 创造世界</small></button>
             </nav>
           </div>
-          <small class="game-version">V1.0 · PLAYABLE SLICE</small>
+          <div class="lobby-caption"><span>THE FRONTIER KEEP</span><strong>边境守望堡</strong><small>每一个奇妙世界，都值得守护。</small></div>
+          <small class="game-version">幻想防线 · 守望者纪事</small>
         </section>
 
         <section class="hub-view hub-page" data-hub-view="play" aria-label="选择世界" hidden>
-          <header class="hub-page-header"><button class="hub-back" data-back-menu type="button" aria-label="返回主菜单">‹</button><div><p class="eyebrow">START GAME</p><h2>选择世界</h2></div></header>
+          <header class="hub-page-header"><button class="hub-back" data-back-menu type="button" aria-label="返回主菜单">‹</button><div><p class="eyebrow">THE REALM ATLAS</p><h2>选择世界</h2><p>沿着古老的地图，寻找下一段冒险。</p></div><span class="atlas-compass" aria-hidden="true">✥</span></header>
           <div id="world-list" class="world-list world-grid" aria-live="polite">正在连接本地存档…</div>
           <section class="world-detail" id="world-detail" aria-label="关卡选择" hidden>
             <div class="section-heading"><div><p class="eyebrow">SELECT LEVEL</p><h2 id="detail-title">世界详情</h2></div><button class="world-select" id="close-world-detail" type="button">返回世界</button></div>
@@ -64,6 +67,7 @@
             <fieldset><legend>画面与语言</legend><label>语言<select id="settings-language"><option value="zh-CN">简体中文</option><option value="en">English</option></select></label><label class="check-setting"><input id="settings-reduced-motion" type="checkbox" /> 减少动态效果</label><button class="button secondary" id="settings-fullscreen" type="button">切换全屏</button></fieldset>
             <div class="settings-actions"><button class="button primary" type="submit">保存设置</button><span id="settings-status" role="status"></span></div>
           </form>
+          <details class="asset-credits"><summary>美术与素材鸣谢</summary><p>Stone Tower Defense Game Art / Monster Game Sprites © CraftPix.net 2D Game Assets，<a href="https://opengameart.org/content/oga-by-30-faq" target="_blank" rel="noreferrer">OGA-BY 3.0</a>。已缩放、整理动画帧。来源：<a href="https://opengameart.org/content/stone-tower-defense-game-art" target="_blank" rel="noreferrer">防御塔</a> · <a href="https://opengameart.org/content/monster-game-sprites" target="_blank" rel="noreferrer">怪物</a>。</p><p>Fantasy UI Borders / Tower Defense © Kenney（CC0）；SmallRTS Pack © glebster51（CC0）。场景组合与界面：Fantasy Frontiers。</p></details>
         </section>
 
         <section class="workshop-panel" id="workshop-panel" hidden><button id="close-workshop" type="button">关闭</button><div id="workshop-list"></div></section>
@@ -103,7 +107,7 @@
           </section>
           <button class="button primary wave-start" id="wave-button" type="button"><img data-asset-id="ff.border-outpost.icon-play" alt="" /><span>开始第一波</span></button>
         </aside>
-        <p class="sr-only" id="game-message" aria-live="polite">选择建造位，再选择防御塔。</p>
+        <p class="game-message" id="game-message" aria-live="polite">选择建造位，再选择防御塔。</p>
         <section id="pause-overlay" class="pause-overlay" role="dialog" aria-modal="true" aria-labelledby="pause-title" hidden>
           <div class="pause-card"><p class="eyebrow">BATTLE PAUSED</p><h2 id="pause-title">暂停</h2>
             <button class="button primary full-width" id="pause-resume" type="button">继续</button>
@@ -116,7 +120,6 @@
           <span id="tower-context-level">Lv.1</span>
           <dl><div><dt>伤害</dt><dd id="tower-context-damage">—</dd></div><div><dt>射程</dt><dd id="tower-context-range">—</dd></div><div><dt>升级</dt><dd id="tower-context-cost">—</dd></div></dl>
           <button class="button primary full-width" id="upgrade-button" type="button">升级</button>
-          <button class="button secondary full-width" id="sell-button" type="button" disabled title="当前版本没有出售规则">出售（暂不可用）</button>
         </aside>
         <div id="wave-banner" class="wave-banner" role="status" aria-live="polite" hidden></div>
         <div id="battle-feedback" class="battle-feedback" aria-live="polite"></div>

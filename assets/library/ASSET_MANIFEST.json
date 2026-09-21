@@ -652,6 +652,924 @@
         "spdx": "CC0-1.0",
         "attribution": "Fantasy Frontiers project-authored SVG art"
       }
+    },
+    {
+      "id": "ff.realm.tower-basic",
+      "path": "assets/library/realm/runtime/tower-basic.png",
+      "kind": "tower",
+      "tags": [
+        "fantasy",
+        "modular",
+        "tower-basic"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.tower-aoe",
+      "path": "assets/library/realm/runtime/tower-aoe.png",
+      "kind": "tower",
+      "tags": [
+        "fantasy",
+        "modular",
+        "tower-aoe"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.tower-slow",
+      "path": "assets/library/realm/runtime/tower-slow.png",
+      "kind": "tower",
+      "tags": [
+        "fantasy",
+        "modular",
+        "tower-slow"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.tower-heavy",
+      "path": "assets/library/realm/runtime/tower-heavy.png",
+      "kind": "tower",
+      "tags": [
+        "fantasy",
+        "modular",
+        "tower-heavy"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.castle",
+      "path": "assets/library/realm/runtime/castle.png",
+      "kind": "decoration",
+      "tags": [
+        "fantasy",
+        "modular",
+        "castle"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "glebster51 — SmallRTS_Pack_vol.1; OpenGameArt.org."
+      }
+    },
+    {
+      "id": "ff.realm.flame",
+      "path": "assets/library/realm/runtime/flame.png",
+      "kind": "decoration",
+      "tags": [
+        "fantasy",
+        "modular",
+        "flame"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.impact",
+      "path": "assets/library/realm/runtime/impact.png",
+      "kind": "decoration",
+      "tags": [
+        "fantasy",
+        "modular",
+        "impact"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.stone",
+      "path": "assets/library/realm/runtime/stone.png",
+      "kind": "decoration",
+      "tags": [
+        "fantasy",
+        "modular",
+        "stone"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.build-slot",
+      "path": "assets/library/realm/runtime/build-slot.png",
+      "kind": "tile",
+      "tags": [
+        "fantasy",
+        "modular",
+        "build-slot"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.tree",
+      "path": "assets/library/realm/runtime/tree.png",
+      "kind": "decoration",
+      "tags": [
+        "fantasy",
+        "modular",
+        "tree"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Kenney — Tower Defense / Fantasy UI Borders; kenney.nl."
+      }
+    },
+    {
+      "id": "ff.realm.rock",
+      "path": "assets/library/realm/runtime/rock.png",
+      "kind": "decoration",
+      "tags": [
+        "fantasy",
+        "modular",
+        "rock"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Kenney — Tower Defense / Fantasy UI Borders; kenney.nl."
+      }
+    },
+    {
+      "id": "ff.realm.crystal",
+      "path": "assets/library/realm/runtime/crystal.png",
+      "kind": "decoration",
+      "tags": [
+        "fantasy",
+        "modular",
+        "crystal"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Kenney — Tower Defense / Fantasy UI Borders; kenney.nl."
+      }
+    },
+    {
+      "id": "ff.realm.panel",
+      "path": "assets/library/realm/runtime/panel.png",
+      "kind": "frame",
+      "tags": [
+        "fantasy",
+        "modular",
+        "panel"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "Kenney — Tower Defense / Fantasy UI Borders; kenney.nl."
+      }
+    },
+    {
+      "id": "ff.realm.ground",
+      "path": "assets/library/realm/runtime/ground.png",
+      "kind": "tile",
+      "tags": [
+        "fantasy",
+        "modular",
+        "ground"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "CC0-1.0",
+        "attribution": "glebster51 — SmallRTS_Pack_vol.1; OpenGameArt.org."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-normal-0",
+      "path": "assets/library/realm/runtime/enemy-normal-0.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-normal-0"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-normal-1",
+      "path": "assets/library/realm/runtime/enemy-normal-1.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-normal-1"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-normal-2",
+      "path": "assets/library/realm/runtime/enemy-normal-2.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-normal-2"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-normal-3",
+      "path": "assets/library/realm/runtime/enemy-normal-3.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-normal-3"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-normal-4",
+      "path": "assets/library/realm/runtime/enemy-normal-4.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-normal-4"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-normal-5",
+      "path": "assets/library/realm/runtime/enemy-normal-5.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-normal-5"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-normal-6",
+      "path": "assets/library/realm/runtime/enemy-normal-6.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-normal-6"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-normal-7",
+      "path": "assets/library/realm/runtime/enemy-normal-7.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-normal-7"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-normal-8",
+      "path": "assets/library/realm/runtime/enemy-normal-8.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-normal-8"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-normal-9",
+      "path": "assets/library/realm/runtime/enemy-normal-9.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-normal-9"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-fast-0",
+      "path": "assets/library/realm/runtime/enemy-fast-0.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-fast-0"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-fast-1",
+      "path": "assets/library/realm/runtime/enemy-fast-1.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-fast-1"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-fast-2",
+      "path": "assets/library/realm/runtime/enemy-fast-2.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-fast-2"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-fast-3",
+      "path": "assets/library/realm/runtime/enemy-fast-3.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-fast-3"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-fast-4",
+      "path": "assets/library/realm/runtime/enemy-fast-4.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-fast-4"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-fast-5",
+      "path": "assets/library/realm/runtime/enemy-fast-5.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-fast-5"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-fast-6",
+      "path": "assets/library/realm/runtime/enemy-fast-6.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-fast-6"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-fast-7",
+      "path": "assets/library/realm/runtime/enemy-fast-7.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-fast-7"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-fast-8",
+      "path": "assets/library/realm/runtime/enemy-fast-8.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-fast-8"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-fast-9",
+      "path": "assets/library/realm/runtime/enemy-fast-9.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-fast-9"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-tank-0",
+      "path": "assets/library/realm/runtime/enemy-tank-0.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-tank-0"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-tank-1",
+      "path": "assets/library/realm/runtime/enemy-tank-1.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-tank-1"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-tank-2",
+      "path": "assets/library/realm/runtime/enemy-tank-2.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-tank-2"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-tank-3",
+      "path": "assets/library/realm/runtime/enemy-tank-3.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-tank-3"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-tank-4",
+      "path": "assets/library/realm/runtime/enemy-tank-4.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-tank-4"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-tank-5",
+      "path": "assets/library/realm/runtime/enemy-tank-5.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-tank-5"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-tank-6",
+      "path": "assets/library/realm/runtime/enemy-tank-6.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-tank-6"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-tank-7",
+      "path": "assets/library/realm/runtime/enemy-tank-7.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-tank-7"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-tank-8",
+      "path": "assets/library/realm/runtime/enemy-tank-8.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-tank-8"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-tank-9",
+      "path": "assets/library/realm/runtime/enemy-tank-9.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-tank-9"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-boss-0",
+      "path": "assets/library/realm/runtime/enemy-boss-0.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-boss-0"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-boss-1",
+      "path": "assets/library/realm/runtime/enemy-boss-1.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-boss-1"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-boss-2",
+      "path": "assets/library/realm/runtime/enemy-boss-2.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-boss-2"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-boss-3",
+      "path": "assets/library/realm/runtime/enemy-boss-3.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-boss-3"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-boss-4",
+      "path": "assets/library/realm/runtime/enemy-boss-4.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-boss-4"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-boss-5",
+      "path": "assets/library/realm/runtime/enemy-boss-5.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-boss-5"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-boss-6",
+      "path": "assets/library/realm/runtime/enemy-boss-6.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-boss-6"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-boss-7",
+      "path": "assets/library/realm/runtime/enemy-boss-7.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-boss-7"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-boss-8",
+      "path": "assets/library/realm/runtime/enemy-boss-8.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-boss-8"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
+    },
+    {
+      "id": "ff.realm.enemy-boss-9",
+      "path": "assets/library/realm/runtime/enemy-boss-9.png",
+      "kind": "enemy",
+      "tags": [
+        "fantasy",
+        "modular",
+        "enemy-boss-9"
+      ],
+      "themeFamilies": [
+        "fantasy"
+      ],
+      "license": {
+        "spdx": "OGA-BY-3.0",
+        "attribution": "CraftPix.net 2D Game Assets — Stone Tower Defense Game Art / Monster Game Sprites; OpenGameArt.org; resized and animation frames sampled. See assets/library/realm/CREDITS.md."
+      }
     }
   ],
   "version": "1.0.0"
