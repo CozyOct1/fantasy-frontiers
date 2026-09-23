@@ -15,11 +15,18 @@
           <div class="main-menu-copy">
             <p class="eyebrow">✦ FANTASY FRONTIERS ✦</p>
             <h1>幻想防线</h1>
-            <p class="main-menu-subtitle">小小防线，无尽奇境</p>
-            <p class="lobby-story">远方的号角已经响起。<br />筑起高塔，让怪物们绕点远路。</p>
+            <section class="campaign-resume" aria-label="当前冒险">
+              <p class="campaign-world" id="lobby-world-name">星辉大陆</p>
+              <p class="campaign-chapter"><span id="lobby-chapter">第 1 章</span><strong id="lobby-mission">暗影初现</strong></p>
+              <div class="campaign-progress"><span>冒险进度</span><strong id="lobby-progress-value">— / —</strong></div>
+              <progress id="lobby-progress" max="1" value="0" aria-label="冒险总进度"></progress>
+              <p class="lobby-state" id="lobby-state" aria-live="polite">正在读取战役记录…</p>
+            </section>
             <nav class="main-menu-actions" aria-label="主菜单选项">
-              <button class="menu-button primary" id="menu-play" type="button"><span aria-hidden="true">⚔</span> 开始冒险 <span aria-hidden="true">›</span></button>
-              <button class="menu-button" id="menu-studio" type="button"><span aria-hidden="true">✦</span> 创意工坊 <small>AI 创造世界</small></button>
+              <p class="mode-label">冒险模式</p>
+              <button class="menu-button primary" id="menu-play" type="button"><span aria-hidden="true">⚔</span> 继续战斗 <span aria-hidden="true">›</span></button>
+              <p class="mode-label creator-mode-label">创造模式</p>
+              <button class="menu-button secondary creative-entry" id="menu-studio" type="button"><span aria-hidden="true">✦</span> 创造世界 <small>工坊与 AI 评测</small></button>
             </nav>
           </div>
           <div class="lobby-caption"><span>THE FRONTIER KEEP</span><strong>边境守望堡</strong><small>每一个奇妙世界，都值得守护。</small></div>
@@ -27,7 +34,7 @@
         </section>
 
         <section class="hub-view hub-page" data-hub-view="play" aria-label="选择世界" hidden>
-          <header class="hub-page-header"><button class="hub-back" data-back-menu type="button" aria-label="返回主菜单">‹</button><div><p class="eyebrow">THE REALM ATLAS</p><h2>选择世界</h2><p>沿着古老的地图，寻找下一段冒险。</p></div><span class="atlas-compass" aria-hidden="true">✥</span></header>
+          <header class="hub-page-header"><button class="hub-back" data-back-menu type="button" aria-label="返回主菜单">‹</button><div><p class="eyebrow">ADVENTURE · WORLD ATLAS</p><h2>世界地图</h2><p>选择一片疆域，继续你的守护之旅。</p></div><span class="atlas-compass" aria-hidden="true">✥</span></header>
           <div id="world-list" class="world-list world-grid" aria-live="polite">正在连接本地存档…</div>
           <section class="world-detail" id="world-detail" aria-label="关卡选择" hidden>
             <div class="section-heading"><div><p class="eyebrow">SELECT LEVEL</p><h2 id="detail-title">世界详情</h2></div><button class="world-select" id="close-world-detail" type="button">返回世界</button></div>
@@ -41,33 +48,34 @@
         <section class="hub-view hub-page studio-home" data-hub-view="studio" aria-label="创意工坊" hidden>
           <header class="hub-page-header"><button class="hub-back" data-back-menu type="button" aria-label="返回主菜单">‹</button><div><p class="eyebrow">CREATION STUDIO</p><h2>创意工坊</h2><p>创造、测试并完善属于你的塔防世界。</p></div></header>
           <div class="studio-tools">
-            <button class="studio-tool-card" id="studio-generate" type="button"><span>✦</span><strong>生成世界</strong><small>输入世界观，由 AI 创建完整三关世界</small></button>
-            <button class="studio-tool-card" id="studio-evaluate" type="button"><span>◈</span><strong>AI 评测</strong><small>自动试玩、追加实验并分析关卡难度</small></button>
+            <button class="studio-tool-card" id="studio-generate" type="button"><span>✦</span><strong>创造一个世界</strong><small>描述幻想，由工坊创建完整三关世界</small></button>
+            <button class="studio-tool-card" id="studio-evaluate" type="button"><span>◈</span><strong>AI 战术报告</strong><small>自动试玩并把关卡表现整理成易读结论</small></button>
+            <a class="studio-tool-card editor-entry" href="./map-editor.html"><span>▦</span><strong>地图工坊</strong><small>绘制路线、塔位与敌军波次，校验后即时试玩</small></a>
           </div>
           <p class="studio-roadmap">社区世界市场将在后续版本开放</p>
         </section>
 
         <section class="hub-view hub-page" data-hub-view="generate" aria-label="生成世界" hidden>
-          <header class="hub-page-header"><button class="hub-back" data-back-studio type="button" aria-label="返回创意工坊">‹</button><div><p class="eyebrow">WORLD GENERATOR</p><h2>生成世界</h2></div></header>
-          <section class="world-creator" aria-label="创建主题世界"><form id="world-create-form"><label for="world-prompt">描述你想守护的世界</label><div class="world-create-row"><input id="world-prompt" name="prompt" maxlength="600" minlength="8" placeholder="例如：漂浮群岛上的星象守卫抵挡虚空生物" required /><button class="button primary" id="world-create-button" type="submit">生成世界</button></div></form><div id="generation-jobs" class="generation-jobs" aria-live="polite"></div></section>
+          <header class="hub-page-header"><button class="hub-back" data-back-studio type="button" aria-label="返回创意工坊">‹</button><div><p class="eyebrow">CREATION STUDIO</p><h2>创造一个世界</h2><p>先确定幻想的方向，再让工坊完成世界档案与三关战役。</p></div></header>
+          <section class="world-creator" aria-label="创建主题世界"><form id="world-create-form"><label for="world-prompt">描述你想守护的世界</label><div class="world-create-row"><input id="world-prompt" name="prompt" maxlength="600" minlength="8" placeholder="例如：漂浮群岛上的星象守卫抵挡虚空生物" required /><button class="button primary" id="world-create-button" type="submit">创造世界</button></div><div class="creation-presets" aria-label="创作灵感"><fieldset><legend>世界类型</legend><button type="button" data-prompt-fragment="漂浮群岛">浮岛</button><button type="button" data-prompt-fragment="古老森林">森林</button><button type="button" data-prompt-fragment="失落废墟">废墟</button></fieldset><fieldset><legend>敌人风格</legend><button type="button" data-prompt-fragment="暗影敌军">暗影</button><button type="button" data-prompt-fragment="机械军团">机械</button><button type="button" data-prompt-fragment="魔法生物">魔法</button></fieldset></div></form><div id="generation-jobs" class="generation-jobs" aria-live="polite"></div></section>
           <div id="generation-world-list" class="creator-world-list" aria-live="polite"></div>
         </section>
 
         <section class="hub-view hub-page" data-hub-view="evaluation" aria-label="AI 评测" hidden>
-          <header class="hub-page-header"><button class="hub-back" data-back-studio type="button" aria-label="返回创意工坊">‹</button><div><p class="eyebrow">EVALUATION AGENT</p><h2>AI 评测</h2><p>选择世界，评测 Agent 将通过确定性模拟检查三种难度。</p></div></header>
+          <header class="hub-page-header"><button class="hub-back" data-back-studio type="button" aria-label="返回创意工坊">‹</button><div><p class="eyebrow">AI TACTICAL REPORT</p><h2>AI 战术报告</h2><p>用确定性实战证据，快速判断策略强度、资源效率与防守稳定性。</p></div></header>
           <div id="evaluation-world-list" class="evaluation-world-list" aria-live="polite"></div>
-          <section id="evaluation-detail" class="evaluation-workspace" hidden><div class="section-heading"><h2 id="evaluation-title">评测报告</h2><div class="evaluation-actions"><a class="button secondary" id="evaluation-download" href="#" download hidden>下载 Markdown</a><button class="button primary" id="evaluation-start" type="button">开始评测</button></div></div><p id="evaluation-status" class="detail-summary"></p><div id="evaluation-report-list" class="evaluation-reports"></div></section>
+          <section id="evaluation-detail" class="evaluation-workspace" hidden><div class="section-heading"><div><p class="eyebrow">综合评级</p><h2 id="evaluation-title">战术报告</h2></div><strong id="evaluation-grade" class="evaluation-grade" aria-label="综合评级">—</strong><div class="evaluation-actions"><a class="button secondary" id="evaluation-download" href="#" download hidden>下载完整报告</a><button class="button primary" id="evaluation-start" type="button">开始评测</button></div></div><p id="evaluation-status" class="detail-summary"></p><div id="evaluation-scorecards" class="evaluation-scorecards" aria-label="战术评分"></div><div id="evaluation-report-list" class="evaluation-reports"></div></section>
         </section>
 
         <section class="hub-view hub-page settings-page" data-hub-view="settings" aria-label="游戏设置" hidden>
           <header class="hub-page-header"><button class="hub-back" data-back-menu type="button" aria-label="返回主菜单">‹</button><div><p class="eyebrow">SETTINGS</p><h2>游戏设置</h2></div></header>
           <form id="settings-form" class="settings-form">
             <fieldset><legend>AI 设置</legend><label>Provider<select id="settings-provider"><option value="deepseek">DeepSeek</option></select></label><label>Model<input id="settings-model" value="deepseek-chat" /></label><label>API Key<input id="settings-api-key" type="password" autocomplete="new-password" placeholder="sk-••••••••" /></label></fieldset>
-            <fieldset><legend>声音</legend><label>主音量<input id="settings-master-volume" type="range" min="0" max="100" value="80" /></label><label>音乐<input id="settings-music-volume" type="range" min="0" max="100" value="70" /></label><label>音效<input id="settings-effects-volume" type="range" min="0" max="100" value="85" /></label></fieldset>
-            <fieldset><legend>画面与语言</legend><label>语言<select id="settings-language"><option value="zh-CN">简体中文</option><option value="en">English</option></select></label><label class="check-setting"><input id="settings-reduced-motion" type="checkbox" /> 减少动态效果</label><button class="button secondary" id="settings-fullscreen" type="button">切换全屏</button></fieldset>
+            <fieldset><legend>声音</legend><label>主音量<input id="settings-master-volume" type="range" min="0" max="100" value="80" /></label><label>音乐<input id="settings-music-volume" type="range" min="0" max="100" value="70" /></label><label>音效<input id="settings-effects-volume" type="range" min="0" max="100" value="85" /></label><label class="check-setting"><input id="settings-muted" type="checkbox" /> 全部静音</label><label class="check-setting"><input id="settings-reduce-intense-audio" type="checkbox" /> 降低强烈音效</label><small id="audio-status">首次点击后启用声音；音频不可用时游戏仍可正常进行。</small></fieldset>
+            <fieldset><legend>画面与语言</legend><label>语言<select id="settings-language"><option value="zh-CN">简体中文</option><option value="en">English</option></select></label><label class="check-setting"><input id="settings-reduced-motion" type="checkbox" /> 减少动态效果</label><label class="check-setting"><input id="settings-screen-shake" type="checkbox" checked /> 屏幕震动</label><button class="button secondary" id="settings-fullscreen" type="button">切换全屏</button></fieldset>
             <div class="settings-actions"><button class="button primary" type="submit">保存设置</button><span id="settings-status" role="status"></span></div>
           </form>
-          <details class="asset-credits"><summary>美术与素材鸣谢</summary><p>Stone Tower Defense Game Art / Monster Game Sprites © CraftPix.net 2D Game Assets，<a href="https://opengameart.org/content/oga-by-30-faq" target="_blank" rel="noreferrer">OGA-BY 3.0</a>。已缩放、整理动画帧。来源：<a href="https://opengameart.org/content/stone-tower-defense-game-art" target="_blank" rel="noreferrer">防御塔</a> · <a href="https://opengameart.org/content/monster-game-sprites" target="_blank" rel="noreferrer">怪物</a>。</p><p>Fantasy UI Borders / Tower Defense © Kenney（CC0）；SmallRTS Pack © glebster51（CC0）。场景组合与界面：Fantasy Frontiers。</p></details>
+          <details class="asset-credits"><summary>美术与素材鸣谢</summary><p>Stone Tower Defense Game Art / Monster Game Sprites © CraftPix.net 2D Game Assets，<a href="https://opengameart.org/content/oga-by-30-faq" target="_blank" rel="noreferrer">OGA-BY 3.0</a>。已缩放、整理动画帧。来源：<a href="https://opengameart.org/content/stone-tower-defense-game-art" target="_blank" rel="noreferrer">防御塔</a> · <a href="https://opengameart.org/content/monster-game-sprites" target="_blank" rel="noreferrer">怪物</a>。</p><p>Fantasy UI Borders / Tower Defense / Interface Sounds / RPG Audio © Kenney（CC0）；SmallRTS Pack © glebster51（CC0）。音乐与环境：beardalaxy、request、TinyWorlds（CC0，详见本地 Audio Credits）。场景组合与界面：Fantasy Frontiers。</p></details>
         </section>
 
         <section class="workshop-panel" id="workshop-panel" hidden><button id="close-workshop" type="button">关闭</button><div id="workshop-list"></div></section>
@@ -84,30 +92,35 @@
           <div class="status-pill" id="game-status" role="status">部署阶段</div>
         </header>
         <section class="battle-hud" aria-label="战斗状态">
-          <div class="resource-card"><img data-asset-id="ff.border-outpost.icon-heart" alt="" /><span class="sr-only">基地生命</span><strong id="hp-value">30 / 30</strong></div>
+          <div class="resource-card"><img data-asset-id="ff.border-outpost.icon-heart" alt="" /><span class="hud-label">城堡</span><strong id="hp-value">30 / 30</strong></div>
           <i aria-hidden="true"></i>
-          <div class="resource-card"><img data-asset-id="ff.border-outpost.icon-gold" alt="" /><span class="sr-only">金币</span><strong id="gold-value">500</strong></div>
+          <div class="resource-card"><img data-asset-id="ff.border-outpost.icon-gold" alt="" /><span class="hud-label">金币</span><strong id="gold-value">500</strong></div>
           <i aria-hidden="true"></i>
-          <div class="resource-card"><img data-asset-id="ff.border-outpost.icon-wave" alt="" /><span class="sr-only">波次</span><strong id="wave-value">0 / 6</strong></div>
+          <div class="resource-card"><img data-asset-id="ff.border-outpost.icon-wave" alt="" /><span class="hud-label">波次</span><strong id="wave-value">0 / 6</strong></div>
         </section>
         <div class="battle-controls" aria-label="战斗控制">
           <button class="button secondary icon-button" id="pause-button" type="button" aria-label="暂停"><img data-asset-id="ff.border-outpost.icon-pause" alt="" /><span class="control-copy">暂停</span></button>
           <button class="button secondary icon-button" id="speed-button" type="button" title="切换游戏速度"><img data-asset-id="ff.border-outpost.icon-speed" alt="" /><span>1× 速度</span></button>
         </div>
+        <section id="wave-brief" class="wave-brief" aria-label="下一波威胁">
+          <div><span class="eyebrow">NEXT WAVE</span><strong id="wave-brief-title">前线试探</strong></div>
+          <p id="wave-brief-copy">读取敌军情报中……</p>
+        </section>
         <div class="board-caption" aria-label="地图标记"><span>裂隙 · 敌人入口</span><span>堡垒 · 基地</span><span>石台 · 建造位</span></div>
         <aside class="control-panel" aria-label="游戏控制">
           <section class="control-section tower-bar" aria-label="选择防御塔">
             <span class="tower-bar-label">防御塔</span>
             <div class="tower-options">
-              <button class="tower-option" data-archetype="basic" data-label="弩塔" aria-label="弩塔，80 金币" title="弩塔 · 快速单体攻击 · 伤害与射程随关卡配置"><img data-asset-id="ff.border-outpost.tower-basic" alt="" /><span>弩塔</span><small>✦ 80</small></button>
-              <button class="tower-option" data-archetype="aoe" data-label="爆裂塔" aria-label="爆裂塔，120 金币" title="爆裂塔 · 范围攻击 · 伤害与射程随关卡配置"><img data-asset-id="ff.border-outpost.tower-aoe" alt="" /><span>爆裂塔</span><small>✦ 120</small></button>
-              <button class="tower-option" data-archetype="slow" data-label="霜缚塔" aria-label="霜缚塔，100 金币" title="霜缚塔 · 减速敌人 · 伤害与射程随关卡配置"><img data-asset-id="ff.border-outpost.tower-slow" alt="" /><span>霜缚塔</span><small>✦ 100</small></button>
-              <button class="tower-option" data-archetype="heavy" data-label="重炮塔" aria-label="重炮塔，160 金币" title="重炮塔 · 重型攻击 · 伤害与射程随关卡配置"><img data-asset-id="ff.border-outpost.tower-heavy" alt="" /><span>重炮塔</span><small>✦ 160</small></button>
+              <button class="tower-option" data-archetype="basic" data-label="弩塔" aria-label="弩塔，单体，80 金币" title="弩塔 · 快速单体攻击 · 伤害与射程随关卡配置"><img data-asset-id="ff.border-outpost.tower-basic" alt="" /><span>弩塔</span><small class="tower-role">单体</small><small>✦ 80</small></button>
+              <button class="tower-option" data-archetype="aoe" data-label="爆裂塔" aria-label="爆裂塔，范围，120 金币" title="爆裂塔 · 范围攻击 · 伤害与射程随关卡配置"><img data-asset-id="ff.border-outpost.tower-aoe" alt="" /><span>爆裂塔</span><small class="tower-role">范围</small><small>✦ 120</small></button>
+              <button class="tower-option" data-archetype="slow" data-label="霜缚塔" aria-label="霜缚塔，控制，100 金币" title="霜缚塔 · 减速敌人 · 伤害与射程随关卡配置"><img data-asset-id="ff.border-outpost.tower-slow" alt="" /><span>霜缚塔</span><small class="tower-role">控制</small><small>✦ 100</small></button>
+              <button class="tower-option" data-archetype="heavy" data-label="重炮塔" aria-label="重炮塔，爆发，160 金币" title="重炮塔 · 重型攻击 · 伤害与射程随关卡配置"><img data-asset-id="ff.border-outpost.tower-heavy" alt="" /><span>重炮塔</span><small class="tower-role">爆发</small><small>✦ 160</small></button>
             </div>
           </section>
           <button class="button primary wave-start" id="wave-button" type="button"><img data-asset-id="ff.border-outpost.icon-play" alt="" /><span>开始第一波</span></button>
         </aside>
         <p class="game-message" id="game-message" aria-live="polite">选择建造位，再选择防御塔。</p>
+        <aside id="battle-guide" class="battle-guide" aria-label="新手指引" hidden><span id="battle-guide-step">1 / 4</span><strong id="battle-guide-title">观察战场</strong><p id="battle-guide-copy">找到敌人入口、道路与基地。</p><button id="battle-guide-next" class="button primary" type="button">知道了</button><button id="battle-guide-skip" class="button secondary" type="button">跳过教学</button></aside>
         <section id="pause-overlay" class="pause-overlay" role="dialog" aria-modal="true" aria-labelledby="pause-title" hidden>
           <div class="pause-card"><p class="eyebrow">BATTLE PAUSED</p><h2 id="pause-title">暂停</h2>
             <button class="button primary full-width" id="pause-resume" type="button">继续</button>
@@ -118,8 +131,10 @@
         <aside id="tower-context-panel" class="tower-context-panel" aria-label="防御塔详情" hidden>
           <strong id="tower-context-name">防御塔</strong>
           <span id="tower-context-level">Lv.1</span>
-          <dl><div><dt>伤害</dt><dd id="tower-context-damage">—</dd></div><div><dt>射程</dt><dd id="tower-context-range">—</dd></div><div><dt>升级</dt><dd id="tower-context-cost">—</dd></div></dl>
+          <p id="tower-context-role" class="tower-context-role">稳定单体输出</p>
+          <dl><div><dt>伤害</dt><dd id="tower-context-damage">—</dd></div><div><dt>射程</dt><dd id="tower-context-range">—</dd></div><div><dt>攻速</dt><dd id="tower-context-speed">—</dd></div><div><dt>升级</dt><dd id="tower-context-cost">—</dd></div></dl>
           <button class="button primary full-width" id="upgrade-button" type="button">升级</button>
+          <button class="button danger full-width" id="sell-button" type="button">拆除并返还</button>
         </aside>
         <div id="wave-banner" class="wave-banner" role="status" aria-live="polite" hidden></div>
         <div id="battle-feedback" class="battle-feedback" aria-live="polite"></div>
@@ -128,7 +143,7 @@
 
       <section id="result-screen" data-app-screen="result" aria-label="战斗结算" hidden>
       <section class="result-panel" id="result-panel" aria-live="polite">
-        <div><p class="eyebrow">BATTLE REPORT</p><h2 id="result-title">战斗结束</h2><p id="result-copy"></p></div>
+        <div><p class="eyebrow">BATTLE REPORT</p><h2 id="result-title">战斗结束</h2><p id="result-copy"></p><dl id="result-facts" class="result-facts"><div><dt>关键失守</dt><dd id="result-leak-fact">本局没有敌人漏过防线</dd></div><div><dt>资源决策</dt><dd id="result-economy-fact">—</dd></div><div><dt>行动记录</dt><dd id="result-action-fact">—</dd></div></dl></div>
         <div class="result-actions" aria-label="结算后操作">
           <button class="button primary" id="replay-level" type="button">再玩一次</button>
           <button class="button secondary" id="next-level" type="button" hidden>下一关</button>

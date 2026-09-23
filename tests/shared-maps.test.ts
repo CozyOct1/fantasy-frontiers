@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DIFFICULTY_PROFILES, SeededRng, gameResultSchema, worldSpecSchema } from "../packages/shared/src/index.js";
-import { MAP_TEMPLATES, generateMap, selectMapTemplate, validateMapSpec } from "../packages/maps/src/index.js";
+import { MAP_TEMPLATES, compileMapDraft, draftFromMap, generateMap, selectMapTemplate, validateMapSpec } from "../packages/maps/src/index.js";
 
 describe("canonical shared schemas and deterministic primitives", () => {
   it("parses the canonical world and result contracts", () => {
@@ -68,5 +68,17 @@ describe("map template pool, generation, and validation", () => {
   it("returns structured failures when templates are exhausted or retry settings are invalid", () => {
     expect(generateMap({ difficulty: "hard", seed: 1, previousTemplateIds: MAP_TEMPLATES.filter(t => t.difficulty === "hard").map(t => t.id) })).toMatchObject({ ok: false, code: "no_template_available", attempts: 0 });
     expect(generateMap({ difficulty: "easy", seed: 1, maxRetries: 0 })).toMatchObject({ ok: false, code: "retry_limit_exceeded" });
+  });
+
+  it("compiles incomplete authoring drafts only after runtime validation succeeds", () => {
+    const generated = generateMap({ difficulty: "easy", seed: 51 });
+    expect(generated.ok).toBe(true);
+    if (!generated.ok) return;
+    const draft = draftFromMap(generated.map, "authoring-test");
+    expect(compileMapDraft(draft)).toMatchObject({ ok: true, map: { templateId: "authored-authoring-test" } });
+    const incomplete = { ...draft, base: null, paths: [] };
+    expect(compileMapDraft(incomplete)).toMatchObject({ ok: false, issues: expect.arrayContaining([expect.objectContaining({ code: "missing_base" })]) });
+    const obstacleConflict = { ...draft, obstacles: [draft.paths[0]!.tiles[1]!] };
+    expect(compileMapDraft(obstacleConflict)).toMatchObject({ ok: false, issues: expect.arrayContaining([expect.objectContaining({ code: "obstacle_on_path" })]) });
   });
 });

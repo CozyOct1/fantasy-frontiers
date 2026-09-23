@@ -1,7 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
-import { randomUUID } from "node:crypto";
-import { generateMap, validateMapSpec } from "@fantasy-frontiers/maps";
-import { campaignSpecSchema, evaluationRecordSchema, evaluationReportSchema, gameResultSchema, generationJobSchema, mapSpecSchema, type CampaignSpec, type EnemyThemeSpec, type EvaluationRecord, type EvaluationReport, type GenerationJob, type LevelRecord, type PlayerProgress, type TowerThemeSpec, type WorldSkin, type WorldSpec } from "@fantasy-frontiers/shared";
+import { createHash, randomUUID } from "node:crypto";
+import { MAP_VALIDATOR_VERSION, compileLevelDraft, createBenchmarkContent, validateMapSpec } from "@fantasy-frontiers/maps";
+import { campaignSpecSchema, evaluationRecordSchema, evaluationReportSchema, gameResultSchema, generationJobSchema, mapDraftSchema, mapSpecSchema, mapTemplateRevisionSchema, type CampaignSpec, type EnemyThemeSpec, type EvaluationRecord, type EvaluationReport, type GenerationJob, type LevelRecord, type MapDraft, type MapTemplateRevision, type PlayerProgress, type TowerThemeSpec, type WorldSkin, type WorldSpec } from "@fantasy-frontiers/shared";
 
 const now = () => new Date().toISOString();
 export class AppStore {
@@ -25,6 +25,8 @@ export class AppStore {
       CREATE TABLE IF NOT EXISTS player_progress(player_id TEXT NOT NULL, level_id TEXT NOT NULL REFERENCES levels(id) ON DELETE CASCADE, unlocked INTEGER NOT NULL, completed INTEGER NOT NULL, best_win INTEGER, best_remaining_hp REAL, best_duration REAL, updated_at TEXT NOT NULL, PRIMARY KEY(player_id, level_id));
       CREATE TABLE IF NOT EXISTS game_runs(id TEXT PRIMARY KEY, player_id TEXT NOT NULL, level_id TEXT NOT NULL REFERENCES levels(id), seed INTEGER NOT NULL, status TEXT NOT NULL, result_json TEXT, started_at TEXT NOT NULL, completed_at TEXT);
       CREATE TABLE IF NOT EXISTS evaluation_runs(id TEXT PRIMARY KEY, level_id TEXT NOT NULL REFERENCES levels(id), status TEXT NOT NULL, report_json TEXT NOT NULL, created_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS map_drafts(id TEXT PRIMARY KEY, revision INTEGER NOT NULL, draft_json TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS map_template_revisions(id TEXT PRIMARY KEY, template_id TEXT NOT NULL, revision INTEGER NOT NULL, content_hash TEXT NOT NULL UNIQUE, record_json TEXT NOT NULL, created_at TEXT NOT NULL, UNIQUE(template_id,revision));
       INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES(1, '${now()}');
     `);
     const columns = new Set((this.db.prepare("PRAGMA table_info(generation_jobs)").all() as { name: string }[]).map(column => column.name));
@@ -41,13 +43,25 @@ export class AppStore {
     if (!evaluationColumns.has("updated_at")) this.db.exec("ALTER TABLE evaluation_runs ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''");
     this.db.exec("UPDATE evaluation_runs SET world_id=(SELECT world_id FROM levels WHERE levels.id=evaluation_runs.level_id) WHERE world_id=''");
     this.db.prepare("INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES(3, ?)").run(now());
+    const runColumns = new Set((this.db.prepare("PRAGMA table_info(game_runs)").all() as { name: string }[]).map(column => column.name));
+    if (!runColumns.has("content_snapshot_json")) this.db.exec("ALTER TABLE game_runs ADD COLUMN content_snapshot_json TEXT");
+    if (!runColumns.has("ruleset_version")) this.db.exec("ALTER TABLE game_runs ADD COLUMN ruleset_version TEXT");
+    this.db.prepare("INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES(4, ?)").run(now());
     this.recoverInterruptedJobs();
   }
   private seed(): void {
     const worldId = "frontier-world";
     const existing = this.db.prepare("SELECT id FROM worlds WHERE id=?").get(worldId);
     if (existing) {
-      const levels = this.listLevels(worldId);
+      let levels = this.listLevels(worldId);
+      for (const difficulty of ["easy", "medium", "hard"] as const) {
+        const level = levels.find(candidate => candidate.id === `frontier-${difficulty}`);
+        if (!level || level.wavePlan) continue;
+        const content = createBenchmarkContent(difficulty, level.id);
+        const migrated: LevelRecord = { ...level, map: { ...content.map, id: level.id }, wavePlan: content.wavePlan, contentVersion: 1, rulesetVersion: "v1.0.0" };
+        this.db.prepare("UPDATE levels SET spec_json=? WHERE id=?").run(JSON.stringify(migrated), level.id);
+      }
+      levels = this.listLevels(worldId);
       if (levels.length === 3) {
         const campaign: CampaignSpec = campaignSpecSchema.parse({ id: "frontier-campaign", worldId, name: "边境战役", levels: levels.map(({ id, difficulty, name, story }) => ({ id, difficulty, name, story, semanticTags: [] })) });
         this.db.prepare("INSERT INTO campaigns(id,world_id,spec_json) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET spec_json=excluded.spec_json").run(campaign.id, worldId, JSON.stringify(campaign));
@@ -63,11 +77,10 @@ export class AppStore {
     try {
       insertWorld.run(world.id, JSON.stringify(world), now());
       const seededLevels: LevelRecord[] = [];
-      for (const [index, difficulty] of (["easy", "medium", "hard"] as const).entries()) {
+      for (const difficulty of ["easy", "medium", "hard"] as const) {
         const id = `frontier-${difficulty}`;
-        const generated = generateMap({ difficulty, seed: [70421, 70422, 70423][index]! });
-        if (!generated.ok) throw new Error(`Unable to create built-in ${difficulty} map: ${generated.message}`);
-        const level: LevelRecord = { id, worldId, difficulty, name: `${world.name} · ${difficulty.toUpperCase()}`, story: "守住防线，迎接下一场考验。", map: { ...generated.map, id } };
+        const content = createBenchmarkContent(difficulty, id);
+        const level: LevelRecord = { id, worldId, difficulty, name: `${world.name} · ${difficulty.toUpperCase()}`, story: "守住防线，迎接下一场考验。", map: { ...content.map, id }, wavePlan: content.wavePlan, contentVersion: 1, rulesetVersion: "v1.0.0" };
         insertLevel.run(id, worldId, difficulty, JSON.stringify(level));
         seededLevels.push(level);
       }
@@ -139,6 +152,46 @@ export class AppStore {
   }
   getProgress(playerId: string): PlayerProgress[] {
     return (this.db.prepare("SELECT p.*,l.id AS level_id FROM player_progress p JOIN levels l ON l.id=p.level_id WHERE player_id=? ORDER BY l.world_id,l.difficulty").all(playerId) as { player_id: string; level_id: string; unlocked: number; completed: number; best_win: number | null; best_remaining_hp: number | null; best_duration: number | null; updated_at: string }[]).map(row => ({ playerId: row.player_id, levelId: row.level_id, unlocked: Boolean(row.unlocked), completed: Boolean(row.completed), bestWin: row.best_win === null ? null : Boolean(row.best_win), bestRemainingHp: row.best_remaining_hp, bestDuration: row.best_duration, updatedAt: row.updated_at }));
+  }
+  createMapDraft(input: unknown): MapDraft {
+    const draft = mapDraftSchema.parse(input);
+    const timestamp = now();
+    this.db.prepare("INSERT INTO map_drafts(id,revision,draft_json,created_at,updated_at) VALUES(?,?,?,?,?)").run(draft.id, draft.revision, JSON.stringify(draft), timestamp, timestamp);
+    return draft;
+  }
+  listMapDrafts(limit = 50): MapDraft[] {
+    return (this.db.prepare("SELECT draft_json FROM map_drafts ORDER BY updated_at DESC LIMIT ?").all(Math.min(Math.max(limit, 1), 100)) as { draft_json: string }[])
+      .map(row => mapDraftSchema.parse(JSON.parse(row.draft_json)));
+  }
+  getMapDraft(id: string): MapDraft | undefined {
+    const row = this.db.prepare("SELECT draft_json FROM map_drafts WHERE id=?").get(id) as { draft_json: string } | undefined;
+    return row ? mapDraftSchema.parse(JSON.parse(row.draft_json)) : undefined;
+  }
+  saveMapDraft(id: string, expectedRevision: number, input: unknown): MapDraft {
+    const incoming = mapDraftSchema.parse(input);
+    if (incoming.id !== id) throw new Error("draft_id_mismatch");
+    const saved = mapDraftSchema.parse({ ...incoming, revision: expectedRevision + 1 });
+    const result = this.db.prepare("UPDATE map_drafts SET revision=?,draft_json=?,updated_at=? WHERE id=? AND revision=?").run(saved.revision, JSON.stringify(saved), now(), id, expectedRevision);
+    if (Number(result.changes) !== 1) throw new Error("draft_revision_conflict");
+    return saved;
+  }
+  validateMapDraft(id: string) {
+    const draft = this.getMapDraft(id); if (!draft) return undefined;
+    return compileLevelDraft(draft);
+  }
+  publishMapDraft(id: string, expectedRevision: number): MapTemplateRevision {
+    const draft = this.getMapDraft(id); if (!draft) throw new Error("draft_not_found");
+    if (draft.revision !== expectedRevision) throw new Error("draft_revision_conflict");
+    const compiled = compileLevelDraft(draft); if (!compiled.ok) throw new Error(`draft_invalid:${compiled.issues.map(issue => issue.code).join(",")}`);
+    const canonical = JSON.stringify({ map: compiled.map, wavePlan: compiled.wavePlan });
+    const contentHash = createHash("sha256").update(canonical).digest("hex");
+    const existing = this.db.prepare("SELECT record_json FROM map_template_revisions WHERE content_hash=?").get(contentHash) as { record_json: string } | undefined;
+    if (existing) return mapTemplateRevisionSchema.parse(JSON.parse(existing.record_json));
+    const templateId = compiled.map.templateId;
+    const row = this.db.prepare("SELECT COALESCE(MAX(revision),0) AS revision FROM map_template_revisions WHERE template_id=?").get(templateId) as { revision: number };
+    const record = mapTemplateRevisionSchema.parse({ id: `${templateId}-r${row.revision + 1}`, templateId, revision: row.revision + 1, sourceDraftId: id, sourceDraftRevision: draft.revision, validatorVersion: MAP_VALIDATOR_VERSION, contentHash, map: compiled.map, wavePlan: compiled.wavePlan, status: "active", createdAt: now() });
+    this.db.prepare("INSERT INTO map_template_revisions(id,template_id,revision,content_hash,record_json,created_at) VALUES(?,?,?,?,?,?)").run(record.id, record.templateId, record.revision, record.contentHash, JSON.stringify(record), record.createdAt);
+    return record;
   }
   createGenerationJob(prompt: string, seed: number): GenerationJob {
     const worldId = `world-${randomUUID()}`;
@@ -290,7 +343,7 @@ export class AppStore {
     if (progress?.unlocked !== 1) throw new Error("level_locked");
     const runSeed = seed ?? level.map.seed;
     const runId = randomUUID();
-    this.db.prepare("INSERT INTO game_runs(id,player_id,level_id,seed,status,started_at) VALUES(?,?,?,?,'running',?)").run(runId, playerId, levelId, runSeed, now());
+    this.db.prepare("INSERT INTO game_runs(id,player_id,level_id,seed,status,started_at,content_snapshot_json,ruleset_version) VALUES(?,?,?,?,'running',?,?,?)").run(runId, playerId, levelId, runSeed, now(), JSON.stringify(level), level.rulesetVersion ?? "v1.0.0");
     return { runId, level, seed: runSeed };
   }
   saveResult(runId: string, levelId: string, resultInput: unknown): PlayerProgress | undefined {

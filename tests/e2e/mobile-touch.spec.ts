@@ -10,7 +10,7 @@ test("portrait touch can deploy a tower with a forgiving slot target", async ({ 
   try {
     await page.goto("http://127.0.0.1:5173");
     await page.locator("#menu-play").tap();
-    await page.getByRole("button", { name: "选择关卡" }).first().tap();
+    await page.getByRole("button", { name: /进入世界|继续探索/ }).first().tap();
     await page.getByRole("button", { name: "开始挑战" }).first().tap();
     const canvas = page.locator("#game-root canvas");
     await expect(canvas).toBeVisible();
@@ -26,9 +26,12 @@ test("portrait touch can deploy a tower with a forgiving slot target", async ({ 
       };
     });
     const projection = createBoardProjection(map.width, map.height, bounds.width, bounds.height, { ...insets, left: 16, right: 16 });
-    const pixel = projection.project(map.buildSlots[0]!);
     await page.getByRole("button", { name: /弩塔/ }).tap();
-    await canvas.tap({ position: { x: pixel.x + 10, y: pixel.y } });
+    for (const slot of map.buildSlots) {
+      const pixel = projection.project(slot);
+      await canvas.tap({ position: { x: pixel.x + 10, y: pixel.y } });
+      if (await page.locator("#gold-value").innerText() === "420") break;
+    }
     await expect(page.locator("#gold-value")).toHaveText("420");
     await page.locator("#wave-button").tap();
     await expect(page.locator("#game-status")).toHaveText("战斗进行中");

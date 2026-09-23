@@ -14,18 +14,20 @@ import {
   type GameState,
   type MapSpec,
   type TowerArchetype,
+  type WavePlan,
 } from "@fantasy-frontiers/shared";
 
 export const FIXED_TICK_SECONDS = 1 / GAME_CONFIG.simulation.tickRate;
 
-export interface CreateGameOptions { map: MapSpec; levelId?: string; seed?: number }
+export interface CreateGameOptions { map: MapSpec; levelId?: string; seed?: number; wavePlan?: WavePlan }
 export type GameEvent =
   | { type: "towerPlaced"; towerId: string; archetype: TowerArchetype; position: Coordinate }
   | { type: "towerUpgraded"; towerId: string; level: number }
+  | { type: "towerSold"; towerId: string; position: Coordinate; refund: number }
   | { type: "enemySpawned"; enemyId: string; archetype: EnemyArchetype; pathId: string }
   | { type: "towerFired"; towerId: string; targetId: string; position: Coordinate; targetPosition: Coordinate; archetype: TowerArchetype }
   | { type: "enemyKilled"; enemyId: string; position: Coordinate; reward: number }
-  | { type: "enemyLeaked"; enemyId: string; position: Coordinate; damage: number }
+  | { type: "enemyLeaked"; enemyId: string; archetype: EnemyArchetype; pathId: string; waveIndex: number; position: Coordinate; damage: number }
   | { type: "waveCompleted"; waveIndex: number }
   | { type: "statusChanged"; status: GameState["status"] };
 export type DispatchResult =
@@ -63,6 +65,7 @@ function buildWave(seed: number, waveIndex: number, difficulty: MapSpec["difficu
 
 export class GameEngine {
   readonly map: MapSpec;
+  readonly wavePlan?: WavePlan;
   private currentState: GameState;
 
   constructor(options: CreateGameOptions) {
@@ -71,6 +74,12 @@ export class GameEngine {
     if (!Number.isSafeInteger(seed) || seed < 0) throw new RangeError("Game seed must be a non-negative safe integer");
     const profile = DIFFICULTY_PROFILES[map.difficulty];
     this.map = map;
+    if (options.wavePlan) {
+      if (options.wavePlan.tickRate !== GAME_CONFIG.simulation.tickRate) throw new RangeError("WavePlan tickRate must match the Game Core tickRate");
+      const pathIds = new Set(map.paths.map(path => path.id));
+      for (const wave of options.wavePlan.waves) for (const event of wave.events) if (!pathIds.has(event.pathId)) throw new RangeError(`WavePlan references unknown path ${event.pathId}`);
+      this.wavePlan = structuredClone(options.wavePlan);
+    }
     this.currentState = gameStateSchema.parse({
       levelId: options.levelId ?? map.id,
       status: "ready",
@@ -78,12 +87,13 @@ export class GameEngine {
       maxHp: profile.startingHp,
       gold: profile.startingGold,
       waveIndex: 0,
-      totalWaves: profile.waveCount,
+      totalWaves: this.wavePlan?.waves.length ?? profile.waveCount,
       towers: [],
       enemies: [],
       elapsedTime: 0,
       seed: seed >>> 0,
       activeWaveQueue: [],
+      activeWavePathQueue: [], activeWaveDelayQueue: [],
       spawnTimer: 0,
       nextEntityId: 1,
       stats: { enemiesSpawned: 0, enemiesKilled: 0, enemiesLeaked: 0, goldEarned: 0, goldSpent: 0, towersBuilt: 0, towerUsage: {} },
@@ -95,7 +105,7 @@ export class GameEngine {
 
   /** Creates an isolated deterministic branch for bounded bot look-ahead. */
   fork(): GameEngine {
-    const branch = new GameEngine({ map: this.map, levelId: this.currentState.levelId, seed: this.currentState.seed });
+    const branch = new GameEngine({ map: this.map, levelId: this.currentState.levelId, seed: this.currentState.seed, ...(this.wavePlan ? { wavePlan: this.wavePlan } : {}) });
     branch.currentState = clone(this.currentState);
     return branch;
   }
@@ -118,6 +128,7 @@ export class GameEngine {
     switch (action.type) {
       case "placeTower": return this.placeTower(action);
       case "upgradeTower": return this.upgradeTower(action.towerId);
+      case "sellTower": return this.sellTower(action.towerId);
       case "startWave": return this.startWave();
       case "pause": return this.changePause("paused");
       case "resume": return this.changePause("running");
@@ -136,14 +147,15 @@ export class GameEngine {
 
     if (state.activeWaveQueue.length > 0 && state.spawnTimer <= Number.EPSILON) {
       const archetype = state.activeWaveQueue.shift()!;
+      const plannedPathId = state.activeWavePathQueue?.shift();
       const rng = new SeededRng((state.seed + state.stats.enemiesSpawned * 0x85ebca6b) >>> 0);
-      const path = this.map.paths[rng.int(0, this.map.paths.length - 1)]!;
+      const path = plannedPathId ? this.map.paths.find(candidate => candidate.id === plannedPathId)! : this.map.paths[rng.int(0, this.map.paths.length - 1)]!;
       const enemyId = entityId(state);
       state.nextEntityId++;
       const enemyStats = GAME_CONFIG.enemies[archetype];
       state.enemies.push({ id: enemyId, archetype, hp: enemyStats.hp, maxHp: enemyStats.hp, pathId: path.id, pathProgress: 0, slowUntil: 0 });
       state.stats.enemiesSpawned++;
-      state.spawnTimer = profile.spawnInterval;
+      state.spawnTimer = state.activeWaveDelayQueue?.shift() ?? profile.spawnInterval;
       events.push({ type: "enemySpawned", enemyId, archetype, pathId: path.id });
     }
 
@@ -157,7 +169,7 @@ export class GameEngine {
         state.enemies = state.enemies.filter(candidate => candidate.id !== enemy.id);
         state.hp = Math.max(0, state.hp - enemyStats.leakDamage);
         state.stats.enemiesLeaked++;
-        events.push({ type: "enemyLeaked", enemyId: enemy.id, position, damage: enemyStats.leakDamage });
+        events.push({ type: "enemyLeaked", enemyId: enemy.id, archetype: enemy.archetype, pathId: enemy.pathId, waveIndex: state.waveIndex, position, damage: enemyStats.leakDamage });
       }
     }
 
@@ -246,13 +258,38 @@ export class GameEngine {
     return this.accept([{ type: "towerUpgraded", towerId, level: tower.level }]);
   }
 
+  private sellTower(towerId: string): DispatchResult {
+    const state = this.currentState;
+    if (state.status !== "ready") return this.reject("Towers can only be sold between waves");
+    const tower = state.towers.find(candidate => candidate.id === towerId);
+    if (!tower) return this.reject("Tower not found");
+    const definition = GAME_CONFIG.towers[tower.archetype];
+    let investment = definition.cost;
+    for (let level = 1; level < tower.level; level++) investment += Math.ceil(definition.upgradeCost * definition.upgradeMultiplier ** (level - 1));
+    const refund = Math.floor(investment * GAME_CONFIG.economy.sellRatio);
+    state.gold += refund;
+    state.towers = state.towers.filter(candidate => candidate.id !== towerId);
+    return this.accept([{ type: "towerSold", towerId, position: { ...tower.position }, refund }]);
+  }
+
   private startWave(): DispatchResult {
     const state = this.currentState;
     if (state.status !== "ready") return this.reject("A wave can only start between waves");
     if (state.waveIndex >= state.totalWaves) return this.reject("All waves are complete");
     state.waveIndex++;
-    state.activeWaveQueue = buildWave(state.seed, state.waveIndex, this.map.difficulty);
-    state.spawnTimer = 0;
+    const planned = this.wavePlan?.waves[state.waveIndex - 1];
+    if (planned) {
+      const events = [...planned.events].sort((a, b) => a.tick - b.tick);
+      state.activeWaveQueue = events.map(event => event.archetype);
+      state.activeWavePathQueue = events.map(event => event.pathId);
+      state.activeWaveDelayQueue = events.slice(1).map((event, index) => (event.tick - events[index]!.tick) / this.wavePlan!.tickRate);
+      state.spawnTimer = events[0]!.tick / this.wavePlan.tickRate;
+    } else {
+      state.activeWaveQueue = buildWave(state.seed, state.waveIndex, this.map.difficulty);
+      state.activeWavePathQueue = [];
+      state.activeWaveDelayQueue = [];
+      state.spawnTimer = 0;
+    }
     state.status = "running";
     return this.accept([{ type: "statusChanged", status: "running" }]);
   }

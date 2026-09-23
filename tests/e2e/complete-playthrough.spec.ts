@@ -16,7 +16,7 @@ test("complete an Easy campaign run, persist its outcome, reload progress, and r
   await expect(page.getByRole("heading", { name: "幻想防线" })).toBeVisible();
   await expect(page.locator("#hub-screen")).toBeVisible();
   await page.locator("#menu-play").click();
-  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: /进入世界|继续探索/ }).first().click();
   await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
   await expect(page.locator("#hub-screen")).toBeHidden();

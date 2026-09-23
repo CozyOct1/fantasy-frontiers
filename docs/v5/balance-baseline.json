@@ -1,0 +1,1300 @@
+{
+  "modelVersion": "v5-balance-1",
+  "gameConfigVersion": "v1.0.0",
+  "generatedAt": "2026-09-22T00:07:25.632Z",
+  "seeds": [
+    101,
+    211,
+    307,
+    401,
+    503
+  ],
+  "trialCountPerScenario": 5,
+  "assumptions": [
+    "机器人策略是诊断工具，不代表真人技能",
+    "rawDps 不计溅射、减速、过量伤害和路径覆盖",
+    "固定 WavePlan 下 seed 不改变出生表，仅影响 legacy 随机行为"
+  ],
+  "towers": [
+    {
+      "id": "basic",
+      "cost": 80,
+      "rawDps": 12,
+      "rawDpsPer100Gold": 15,
+      "range": 3,
+      "splashRadius": 0,
+      "slowRatio": 0
+    },
+    {
+      "id": "aoe",
+      "cost": 120,
+      "rawDps": 6.4,
+      "rawDpsPer100Gold": 5.333333333333334,
+      "range": 2.5,
+      "splashRadius": 1,
+      "slowRatio": 0
+    },
+    {
+      "id": "slow",
+      "cost": 100,
+      "rawDps": 4,
+      "rawDpsPer100Gold": 4,
+      "range": 3,
+      "splashRadius": 0,
+      "slowRatio": 0.45
+    },
+    {
+      "id": "heavy",
+      "cost": 160,
+      "rawDps": 15.75,
+      "rawDpsPer100Gold": 9.84375,
+      "range": 4,
+      "splashRadius": 0,
+      "slowRatio": 0
+    }
+  ],
+  "scenarios": [
+    {
+      "difficulty": "easy",
+      "policy": "novice",
+      "policyVersion": "1.0.0",
+      "metrics": {
+        "runs": 5,
+        "wins": 5,
+        "winRate": 1,
+        "avgRemainingHp": 30,
+        "medianRemainingHp": 30,
+        "leakRate": 0,
+        "avgFailureWave": 0,
+        "avgGoldSpent": 800,
+        "avgGoldEarned": 512,
+        "resourceUtilization": 0.7905138339920948,
+        "towerUsageDistribution": {
+          "basic": 1
+        },
+        "dominantTowerRatio": 1,
+        "avgDuration": 91.34999999999695
+      },
+      "waves": [
+        {
+          "waveIndex": 1,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 30,
+          "avgEnemiesSpawned": 4,
+          "avgEnemiesKilled": 4,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 480,
+          "avgGoldEarned": 32,
+          "sourceRunIds": [
+            "run-v5-easy-novice-0-101",
+            "run-v5-easy-novice-1-211",
+            "run-v5-easy-novice-2-307",
+            "run-v5-easy-novice-3-401",
+            "run-v5-easy-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 2,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 30,
+          "avgEnemiesSpawned": 6,
+          "avgEnemiesKilled": 6,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 0,
+          "avgGoldEarned": 48,
+          "sourceRunIds": [
+            "run-v5-easy-novice-0-101",
+            "run-v5-easy-novice-1-211",
+            "run-v5-easy-novice-2-307",
+            "run-v5-easy-novice-3-401",
+            "run-v5-easy-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 3,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 30,
+          "avgEnemiesSpawned": 8,
+          "avgEnemiesKilled": 8,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 56,
+          "sourceRunIds": [
+            "run-v5-easy-novice-0-101",
+            "run-v5-easy-novice-1-211",
+            "run-v5-easy-novice-2-307",
+            "run-v5-easy-novice-3-401",
+            "run-v5-easy-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 4,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 30,
+          "avgEnemiesSpawned": 10,
+          "avgEnemiesKilled": 10,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 0,
+          "avgGoldEarned": 80,
+          "sourceRunIds": [
+            "run-v5-easy-novice-0-101",
+            "run-v5-easy-novice-1-211",
+            "run-v5-easy-novice-2-307",
+            "run-v5-easy-novice-3-401",
+            "run-v5-easy-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 5,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 30,
+          "avgEnemiesSpawned": 12,
+          "avgEnemiesKilled": 12,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 84,
+          "sourceRunIds": [
+            "run-v5-easy-novice-0-101",
+            "run-v5-easy-novice-1-211",
+            "run-v5-easy-novice-2-307",
+            "run-v5-easy-novice-3-401",
+            "run-v5-easy-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 6,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 30,
+          "avgEnemiesSpawned": 14,
+          "avgEnemiesKilled": 14,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 160,
+          "avgGoldEarned": 212,
+          "sourceRunIds": [
+            "run-v5-easy-novice-0-101",
+            "run-v5-easy-novice-1-211",
+            "run-v5-easy-novice-2-307",
+            "run-v5-easy-novice-3-401",
+            "run-v5-easy-novice-4-503"
+          ]
+        }
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "policy": "baseline",
+      "policyVersion": "1.0.0",
+      "metrics": {
+        "runs": 5,
+        "wins": 5,
+        "winRate": 1,
+        "avgRemainingHp": 30,
+        "medianRemainingHp": 30,
+        "leakRate": 0,
+        "avgFailureWave": 0,
+        "avgGoldSpent": 750,
+        "avgGoldEarned": 512,
+        "resourceUtilization": 0.741106719367589,
+        "towerUsageDistribution": {
+          "basic": 0.7513812154696132,
+          "heavy": 0.24861878453038674
+        },
+        "dominantTowerRatio": 0.7513812154696132,
+        "avgDuration": 111.39999999999581
+      },
+      "waves": [
+        {
+          "waveIndex": 1,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 30,
+          "avgEnemiesSpawned": 4,
+          "avgEnemiesKilled": 4,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 320,
+          "avgGoldEarned": 32,
+          "sourceRunIds": [
+            "run-v5-easy-baseline-0-101",
+            "run-v5-easy-baseline-1-211",
+            "run-v5-easy-baseline-2-307",
+            "run-v5-easy-baseline-3-401",
+            "run-v5-easy-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 2,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 30,
+          "avgEnemiesSpawned": 6,
+          "avgEnemiesKilled": 6,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 120,
+          "avgGoldEarned": 48,
+          "sourceRunIds": [
+            "run-v5-easy-baseline-0-101",
+            "run-v5-easy-baseline-1-211",
+            "run-v5-easy-baseline-2-307",
+            "run-v5-easy-baseline-3-401",
+            "run-v5-easy-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 3,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 30,
+          "avgEnemiesSpawned": 8,
+          "avgEnemiesKilled": 8,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 56,
+          "sourceRunIds": [
+            "run-v5-easy-baseline-0-101",
+            "run-v5-easy-baseline-1-211",
+            "run-v5-easy-baseline-2-307",
+            "run-v5-easy-baseline-3-401",
+            "run-v5-easy-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 4,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 30,
+          "avgEnemiesSpawned": 10,
+          "avgEnemiesKilled": 10,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 60,
+          "avgGoldEarned": 80,
+          "sourceRunIds": [
+            "run-v5-easy-baseline-0-101",
+            "run-v5-easy-baseline-1-211",
+            "run-v5-easy-baseline-2-307",
+            "run-v5-easy-baseline-3-401",
+            "run-v5-easy-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 5,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 30,
+          "avgEnemiesSpawned": 12,
+          "avgEnemiesKilled": 12,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 90,
+          "avgGoldEarned": 84,
+          "sourceRunIds": [
+            "run-v5-easy-baseline-0-101",
+            "run-v5-easy-baseline-1-211",
+            "run-v5-easy-baseline-2-307",
+            "run-v5-easy-baseline-3-401",
+            "run-v5-easy-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 6,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 30,
+          "avgEnemiesSpawned": 14,
+          "avgEnemiesKilled": 14,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 212,
+          "sourceRunIds": [
+            "run-v5-easy-baseline-0-101",
+            "run-v5-easy-baseline-1-211",
+            "run-v5-easy-baseline-2-307",
+            "run-v5-easy-baseline-3-401",
+            "run-v5-easy-baseline-4-503"
+          ]
+        }
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "policy": "expert",
+      "policyVersion": "1.0.0",
+      "metrics": {
+        "runs": 5,
+        "wins": 5,
+        "winRate": 1,
+        "avgRemainingHp": 29,
+        "medianRemainingHp": 29,
+        "leakRate": 0.018518518518518517,
+        "avgFailureWave": 0,
+        "avgGoldSpent": 740,
+        "avgGoldEarned": 504,
+        "resourceUtilization": 0.7370517928286853,
+        "towerUsageDistribution": {
+          "basic": 0.42016806722689076,
+          "heavy": 0.5798319327731093
+        },
+        "dominantTowerRatio": 0.5798319327731093,
+        "avgDuration": 97.04999999999663
+      },
+      "waves": [
+        {
+          "waveIndex": 1,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 30,
+          "avgRemainingHp": 29,
+          "avgEnemiesSpawned": 4,
+          "avgEnemiesKilled": 3,
+          "avgEnemiesLeaked": 1,
+          "avgGoldSpent": 160,
+          "avgGoldEarned": 24,
+          "sourceRunIds": [
+            "run-v5-easy-expert-0-101",
+            "run-v5-easy-expert-1-211",
+            "run-v5-easy-expert-2-307",
+            "run-v5-easy-expert-3-401",
+            "run-v5-easy-expert-4-503"
+          ]
+        },
+        {
+          "waveIndex": 2,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 29,
+          "avgRemainingHp": 29,
+          "avgEnemiesSpawned": 6,
+          "avgEnemiesKilled": 6,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 120,
+          "avgGoldEarned": 48,
+          "sourceRunIds": [
+            "run-v5-easy-expert-0-101",
+            "run-v5-easy-expert-1-211",
+            "run-v5-easy-expert-2-307",
+            "run-v5-easy-expert-3-401",
+            "run-v5-easy-expert-4-503"
+          ]
+        },
+        {
+          "waveIndex": 3,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 29,
+          "avgRemainingHp": 29,
+          "avgEnemiesSpawned": 8,
+          "avgEnemiesKilled": 8,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 160,
+          "avgGoldEarned": 56,
+          "sourceRunIds": [
+            "run-v5-easy-expert-0-101",
+            "run-v5-easy-expert-1-211",
+            "run-v5-easy-expert-2-307",
+            "run-v5-easy-expert-3-401",
+            "run-v5-easy-expert-4-503"
+          ]
+        },
+        {
+          "waveIndex": 4,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 29,
+          "avgRemainingHp": 29,
+          "avgEnemiesSpawned": 10,
+          "avgEnemiesKilled": 10,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 80,
+          "sourceRunIds": [
+            "run-v5-easy-expert-0-101",
+            "run-v5-easy-expert-1-211",
+            "run-v5-easy-expert-2-307",
+            "run-v5-easy-expert-3-401",
+            "run-v5-easy-expert-4-503"
+          ]
+        },
+        {
+          "waveIndex": 5,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 29,
+          "avgRemainingHp": 29,
+          "avgEnemiesSpawned": 12,
+          "avgEnemiesKilled": 12,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 60,
+          "avgGoldEarned": 84,
+          "sourceRunIds": [
+            "run-v5-easy-expert-0-101",
+            "run-v5-easy-expert-1-211",
+            "run-v5-easy-expert-2-307",
+            "run-v5-easy-expert-3-401",
+            "run-v5-easy-expert-4-503"
+          ]
+        },
+        {
+          "waveIndex": 6,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 29,
+          "avgRemainingHp": 29,
+          "avgEnemiesSpawned": 14,
+          "avgEnemiesKilled": 14,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 160,
+          "avgGoldEarned": 212,
+          "sourceRunIds": [
+            "run-v5-easy-expert-0-101",
+            "run-v5-easy-expert-1-211",
+            "run-v5-easy-expert-2-307",
+            "run-v5-easy-expert-3-401",
+            "run-v5-easy-expert-4-503"
+          ]
+        }
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "policy": "novice",
+      "policyVersion": "1.0.0",
+      "metrics": {
+        "runs": 5,
+        "wins": 5,
+        "winRate": 1,
+        "avgRemainingHp": 25,
+        "medianRemainingHp": 25,
+        "leakRate": 0,
+        "avgFailureWave": 0,
+        "avgGoldSpent": 640,
+        "avgGoldEarned": 1449,
+        "resourceUtilization": 0.34613304488912927,
+        "towerUsageDistribution": {
+          "basic": 1
+        },
+        "dominantTowerRatio": 1,
+        "avgDuration": 195.30000000001016
+      },
+      "waves": [
+        {
+          "waveIndex": 1,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 6,
+          "avgEnemiesKilled": 6,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 400,
+          "avgGoldEarned": 48,
+          "sourceRunIds": [
+            "run-v5-medium-novice-0-101",
+            "run-v5-medium-novice-1-211",
+            "run-v5-medium-novice-2-307",
+            "run-v5-medium-novice-3-401",
+            "run-v5-medium-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 2,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 9,
+          "avgEnemiesKilled": 9,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 0,
+          "avgGoldEarned": 63,
+          "sourceRunIds": [
+            "run-v5-medium-novice-0-101",
+            "run-v5-medium-novice-1-211",
+            "run-v5-medium-novice-2-307",
+            "run-v5-medium-novice-3-401",
+            "run-v5-medium-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 3,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 12,
+          "avgEnemiesKilled": 12,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 96,
+          "sourceRunIds": [
+            "run-v5-medium-novice-0-101",
+            "run-v5-medium-novice-1-211",
+            "run-v5-medium-novice-2-307",
+            "run-v5-medium-novice-3-401",
+            "run-v5-medium-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 4,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 15,
+          "avgEnemiesKilled": 15,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 220,
+          "sourceRunIds": [
+            "run-v5-medium-novice-0-101",
+            "run-v5-medium-novice-1-211",
+            "run-v5-medium-novice-2-307",
+            "run-v5-medium-novice-3-401",
+            "run-v5-medium-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 5,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 18,
+          "avgEnemiesKilled": 18,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 126,
+          "sourceRunIds": [
+            "run-v5-medium-novice-0-101",
+            "run-v5-medium-novice-1-211",
+            "run-v5-medium-novice-2-307",
+            "run-v5-medium-novice-3-401",
+            "run-v5-medium-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 6,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 21,
+          "avgEnemiesKilled": 21,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 0,
+          "avgGoldEarned": 308,
+          "sourceRunIds": [
+            "run-v5-medium-novice-0-101",
+            "run-v5-medium-novice-1-211",
+            "run-v5-medium-novice-2-307",
+            "run-v5-medium-novice-3-401",
+            "run-v5-medium-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 7,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 24,
+          "avgEnemiesKilled": 24,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 0,
+          "avgGoldEarned": 192,
+          "sourceRunIds": [
+            "run-v5-medium-novice-0-101",
+            "run-v5-medium-novice-1-211",
+            "run-v5-medium-novice-2-307",
+            "run-v5-medium-novice-3-401",
+            "run-v5-medium-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 8,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 27,
+          "avgEnemiesKilled": 27,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 0,
+          "avgGoldEarned": 396,
+          "sourceRunIds": [
+            "run-v5-medium-novice-0-101",
+            "run-v5-medium-novice-1-211",
+            "run-v5-medium-novice-2-307",
+            "run-v5-medium-novice-3-401",
+            "run-v5-medium-novice-4-503"
+          ]
+        }
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "policy": "baseline",
+      "policyVersion": "1.0.0",
+      "metrics": {
+        "runs": 5,
+        "wins": 5,
+        "winRate": 1,
+        "avgRemainingHp": 25,
+        "medianRemainingHp": 25,
+        "leakRate": 0,
+        "avgFailureWave": 0,
+        "avgGoldSpent": 1390,
+        "avgGoldEarned": 1449,
+        "resourceUtilization": 0.7517577068685776,
+        "towerUsageDistribution": {
+          "basic": 0.9473684210526315,
+          "heavy": 0.05263157894736842
+        },
+        "dominantTowerRatio": 0.9473684210526315,
+        "avgDuration": 196.8000000000105
+      },
+      "waves": [
+        {
+          "waveIndex": 1,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 6,
+          "avgEnemiesKilled": 6,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 240,
+          "avgGoldEarned": 48,
+          "sourceRunIds": [
+            "run-v5-medium-baseline-0-101",
+            "run-v5-medium-baseline-1-211",
+            "run-v5-medium-baseline-2-307",
+            "run-v5-medium-baseline-3-401",
+            "run-v5-medium-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 2,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 9,
+          "avgEnemiesKilled": 9,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 150,
+          "avgGoldEarned": 63,
+          "sourceRunIds": [
+            "run-v5-medium-baseline-0-101",
+            "run-v5-medium-baseline-1-211",
+            "run-v5-medium-baseline-2-307",
+            "run-v5-medium-baseline-3-401",
+            "run-v5-medium-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 3,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 12,
+          "avgEnemiesKilled": 12,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 96,
+          "sourceRunIds": [
+            "run-v5-medium-baseline-0-101",
+            "run-v5-medium-baseline-1-211",
+            "run-v5-medium-baseline-2-307",
+            "run-v5-medium-baseline-3-401",
+            "run-v5-medium-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 4,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 15,
+          "avgEnemiesKilled": 15,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 220,
+          "sourceRunIds": [
+            "run-v5-medium-baseline-0-101",
+            "run-v5-medium-baseline-1-211",
+            "run-v5-medium-baseline-2-307",
+            "run-v5-medium-baseline-3-401",
+            "run-v5-medium-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 5,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 18,
+          "avgEnemiesKilled": 18,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 210,
+          "avgGoldEarned": 126,
+          "sourceRunIds": [
+            "run-v5-medium-baseline-0-101",
+            "run-v5-medium-baseline-1-211",
+            "run-v5-medium-baseline-2-307",
+            "run-v5-medium-baseline-3-401",
+            "run-v5-medium-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 6,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 21,
+          "avgEnemiesKilled": 21,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 150,
+          "avgGoldEarned": 308,
+          "sourceRunIds": [
+            "run-v5-medium-baseline-0-101",
+            "run-v5-medium-baseline-1-211",
+            "run-v5-medium-baseline-2-307",
+            "run-v5-medium-baseline-3-401",
+            "run-v5-medium-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 7,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 24,
+          "avgEnemiesKilled": 24,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 250,
+          "avgGoldEarned": 192,
+          "sourceRunIds": [
+            "run-v5-medium-baseline-0-101",
+            "run-v5-medium-baseline-1-211",
+            "run-v5-medium-baseline-2-307",
+            "run-v5-medium-baseline-3-401",
+            "run-v5-medium-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 8,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 25,
+          "avgEnemiesSpawned": 27,
+          "avgEnemiesKilled": 27,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 230,
+          "avgGoldEarned": 396,
+          "sourceRunIds": [
+            "run-v5-medium-baseline-0-101",
+            "run-v5-medium-baseline-1-211",
+            "run-v5-medium-baseline-2-307",
+            "run-v5-medium-baseline-3-401",
+            "run-v5-medium-baseline-4-503"
+          ]
+        }
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "policy": "expert",
+      "policyVersion": "1.0.0",
+      "metrics": {
+        "runs": 5,
+        "wins": 0,
+        "winRate": 0,
+        "avgRemainingHp": 0,
+        "medianRemainingHp": 0,
+        "leakRate": 0.18518518518518517,
+        "avgFailureWave": 6,
+        "avgGoldSpent": 680,
+        "avgGoldEarned": 591,
+        "resourceUtilization": 0.686175580221998,
+        "towerUsageDistribution": {
+          "basic": 0.35260115606936415,
+          "heavy": 0.6473988439306358
+        },
+        "dominantTowerRatio": 0.6473988439306358,
+        "avgDuration": 137.24999999999696
+      },
+      "waves": [
+        {
+          "waveIndex": 1,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 25,
+          "avgRemainingHp": 22,
+          "avgEnemiesSpawned": 6,
+          "avgEnemiesKilled": 3,
+          "avgEnemiesLeaked": 3,
+          "avgGoldSpent": 160,
+          "avgGoldEarned": 24,
+          "sourceRunIds": [
+            "run-v5-medium-expert-0-101",
+            "run-v5-medium-expert-1-211",
+            "run-v5-medium-expert-2-307",
+            "run-v5-medium-expert-3-401",
+            "run-v5-medium-expert-4-503"
+          ]
+        },
+        {
+          "waveIndex": 2,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 22,
+          "avgRemainingHp": 22,
+          "avgEnemiesSpawned": 9,
+          "avgEnemiesKilled": 9,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 160,
+          "avgGoldEarned": 63,
+          "sourceRunIds": [
+            "run-v5-medium-expert-0-101",
+            "run-v5-medium-expert-1-211",
+            "run-v5-medium-expert-2-307",
+            "run-v5-medium-expert-3-401",
+            "run-v5-medium-expert-4-503"
+          ]
+        },
+        {
+          "waveIndex": 3,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 22,
+          "avgRemainingHp": 19,
+          "avgEnemiesSpawned": 12,
+          "avgEnemiesKilled": 9,
+          "avgEnemiesLeaked": 3,
+          "avgGoldSpent": 120,
+          "avgGoldEarned": 72,
+          "sourceRunIds": [
+            "run-v5-medium-expert-0-101",
+            "run-v5-medium-expert-1-211",
+            "run-v5-medium-expert-2-307",
+            "run-v5-medium-expert-3-401",
+            "run-v5-medium-expert-4-503"
+          ]
+        },
+        {
+          "waveIndex": 4,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 19,
+          "avgRemainingHp": 2,
+          "avgEnemiesSpawned": 15,
+          "avgEnemiesKilled": 8,
+          "avgEnemiesLeaked": 7,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 114,
+          "sourceRunIds": [
+            "run-v5-medium-expert-0-101",
+            "run-v5-medium-expert-1-211",
+            "run-v5-medium-expert-2-307",
+            "run-v5-medium-expert-3-401",
+            "run-v5-medium-expert-4-503"
+          ]
+        },
+        {
+          "waveIndex": 5,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 2,
+          "avgRemainingHp": 2,
+          "avgEnemiesSpawned": 18,
+          "avgEnemiesKilled": 18,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 0,
+          "avgGoldEarned": 126,
+          "sourceRunIds": [
+            "run-v5-medium-expert-0-101",
+            "run-v5-medium-expert-1-211",
+            "run-v5-medium-expert-2-307",
+            "run-v5-medium-expert-3-401",
+            "run-v5-medium-expert-4-503"
+          ]
+        },
+        {
+          "waveIndex": 6,
+          "runs": 5,
+          "completedRuns": 0,
+          "completionRate": 0,
+          "avgStartingHp": 2,
+          "avgRemainingHp": 0,
+          "avgEnemiesSpawned": 21,
+          "avgEnemiesKilled": 14,
+          "avgEnemiesLeaked": 2,
+          "avgGoldSpent": 160,
+          "avgGoldEarned": 192,
+          "sourceRunIds": [
+            "run-v5-medium-expert-0-101",
+            "run-v5-medium-expert-1-211",
+            "run-v5-medium-expert-2-307",
+            "run-v5-medium-expert-3-401",
+            "run-v5-medium-expert-4-503"
+          ]
+        }
+      ]
+    },
+    {
+      "difficulty": "hard",
+      "policy": "novice",
+      "policyVersion": "1.0.0",
+      "metrics": {
+        "runs": 5,
+        "wins": 0,
+        "winRate": 0,
+        "avgRemainingHp": 0,
+        "medianRemainingHp": 0,
+        "leakRate": 0.3333333333333333,
+        "avgFailureWave": 3,
+        "avgGoldSpent": 400,
+        "avgGoldEarned": 248,
+        "resourceUtilization": 0.7299270072992701,
+        "towerUsageDistribution": {
+          "basic": 1
+        },
+        "dominantTowerRatio": 1,
+        "avgDuration": 67.04999999999833
+      },
+      "waves": [
+        {
+          "waveIndex": 1,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 20,
+          "avgRemainingHp": 16,
+          "avgEnemiesSpawned": 8,
+          "avgEnemiesKilled": 4,
+          "avgEnemiesLeaked": 4,
+          "avgGoldSpent": 240,
+          "avgGoldEarned": 28,
+          "sourceRunIds": [
+            "run-v5-hard-novice-0-101",
+            "run-v5-hard-novice-1-211",
+            "run-v5-hard-novice-2-307",
+            "run-v5-hard-novice-3-401",
+            "run-v5-hard-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 2,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 16,
+          "avgRemainingHp": 14,
+          "avgEnemiesSpawned": 12,
+          "avgEnemiesKilled": 10,
+          "avgEnemiesLeaked": 2,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 80,
+          "sourceRunIds": [
+            "run-v5-hard-novice-0-101",
+            "run-v5-hard-novice-1-211",
+            "run-v5-hard-novice-2-307",
+            "run-v5-hard-novice-3-401",
+            "run-v5-hard-novice-4-503"
+          ]
+        },
+        {
+          "waveIndex": 3,
+          "runs": 5,
+          "completedRuns": 0,
+          "completionRate": 0,
+          "avgStartingHp": 14,
+          "avgRemainingHp": 0,
+          "avgEnemiesSpawned": 16,
+          "avgEnemiesKilled": 10,
+          "avgEnemiesLeaked": 6,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 140,
+          "sourceRunIds": [
+            "run-v5-hard-novice-0-101",
+            "run-v5-hard-novice-1-211",
+            "run-v5-hard-novice-2-307",
+            "run-v5-hard-novice-3-401",
+            "run-v5-hard-novice-4-503"
+          ]
+        }
+      ]
+    },
+    {
+      "difficulty": "hard",
+      "policy": "baseline",
+      "policyVersion": "1.0.0",
+      "metrics": {
+        "runs": 5,
+        "wins": 0,
+        "winRate": 0,
+        "avgRemainingHp": 0,
+        "medianRemainingHp": 0,
+        "leakRate": 0.1125,
+        "avgFailureWave": 5,
+        "avgGoldSpent": 670,
+        "avgGoldEarned": 634,
+        "resourceUtilization": 0.7173447537473233,
+        "towerUsageDistribution": {
+          "basic": 0.9139344262295082,
+          "heavy": 0.0860655737704918
+        },
+        "dominantTowerRatio": 0.9139344262295082,
+        "avgDuration": 118.29999999999544
+      },
+      "waves": [
+        {
+          "waveIndex": 1,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 20,
+          "avgRemainingHp": 20,
+          "avgEnemiesSpawned": 8,
+          "avgEnemiesKilled": 8,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 240,
+          "avgGoldEarned": 56,
+          "sourceRunIds": [
+            "run-v5-hard-baseline-0-101",
+            "run-v5-hard-baseline-1-211",
+            "run-v5-hard-baseline-2-307",
+            "run-v5-hard-baseline-3-401",
+            "run-v5-hard-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 2,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 20,
+          "avgRemainingHp": 19,
+          "avgEnemiesSpawned": 12,
+          "avgEnemiesKilled": 11,
+          "avgEnemiesLeaked": 1,
+          "avgGoldSpent": 60,
+          "avgGoldEarned": 88,
+          "sourceRunIds": [
+            "run-v5-hard-baseline-0-101",
+            "run-v5-hard-baseline-1-211",
+            "run-v5-hard-baseline-2-307",
+            "run-v5-hard-baseline-3-401",
+            "run-v5-hard-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 3,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 19,
+          "avgRemainingHp": 6,
+          "avgEnemiesSpawned": 16,
+          "avgEnemiesKilled": 11,
+          "avgEnemiesLeaked": 5,
+          "avgGoldSpent": 90,
+          "avgGoldEarned": 158,
+          "sourceRunIds": [
+            "run-v5-hard-baseline-0-101",
+            "run-v5-hard-baseline-1-211",
+            "run-v5-hard-baseline-2-307",
+            "run-v5-hard-baseline-3-401",
+            "run-v5-hard-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 4,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 6,
+          "avgRemainingHp": 6,
+          "avgEnemiesSpawned": 20,
+          "avgEnemiesKilled": 20,
+          "avgEnemiesLeaked": 0,
+          "avgGoldSpent": 160,
+          "avgGoldEarned": 140,
+          "sourceRunIds": [
+            "run-v5-hard-baseline-0-101",
+            "run-v5-hard-baseline-1-211",
+            "run-v5-hard-baseline-2-307",
+            "run-v5-hard-baseline-3-401",
+            "run-v5-hard-baseline-4-503"
+          ]
+        },
+        {
+          "waveIndex": 5,
+          "runs": 5,
+          "completedRuns": 0,
+          "completionRate": 0,
+          "avgStartingHp": 6,
+          "avgRemainingHp": 0,
+          "avgEnemiesSpawned": 24,
+          "avgEnemiesKilled": 14,
+          "avgEnemiesLeaked": 3,
+          "avgGoldSpent": 120,
+          "avgGoldEarned": 192,
+          "sourceRunIds": [
+            "run-v5-hard-baseline-0-101",
+            "run-v5-hard-baseline-1-211",
+            "run-v5-hard-baseline-2-307",
+            "run-v5-hard-baseline-3-401",
+            "run-v5-hard-baseline-4-503"
+          ]
+        }
+      ]
+    },
+    {
+      "difficulty": "hard",
+      "policy": "expert",
+      "policyVersion": "1.0.0",
+      "metrics": {
+        "runs": 5,
+        "wins": 0,
+        "winRate": 0,
+        "avgRemainingHp": 0,
+        "medianRemainingHp": 0,
+        "leakRate": 0.3888888888888889,
+        "avgFailureWave": 3,
+        "avgGoldSpent": 300,
+        "avgGoldEarned": 151,
+        "resourceUtilization": 0.6651884700665188,
+        "towerUsageDistribution": {
+          "basic": 0.5967741935483871,
+          "heavy": 0.4032258064516129
+        },
+        "dominantTowerRatio": 0.5967741935483871,
+        "avgDuration": 62.2499999999986
+      },
+      "waves": [
+        {
+          "waveIndex": 1,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 20,
+          "avgRemainingHp": 17,
+          "avgEnemiesSpawned": 8,
+          "avgEnemiesKilled": 5,
+          "avgEnemiesLeaked": 3,
+          "avgGoldSpent": 160,
+          "avgGoldEarned": 35,
+          "sourceRunIds": [
+            "run-v5-hard-expert-0-101",
+            "run-v5-hard-expert-1-211",
+            "run-v5-hard-expert-2-307",
+            "run-v5-hard-expert-3-401",
+            "run-v5-hard-expert-4-503"
+          ]
+        },
+        {
+          "waveIndex": 2,
+          "runs": 5,
+          "completedRuns": 5,
+          "completionRate": 1,
+          "avgStartingHp": 17,
+          "avgRemainingHp": 13,
+          "avgEnemiesSpawned": 12,
+          "avgEnemiesKilled": 8,
+          "avgEnemiesLeaked": 4,
+          "avgGoldSpent": 80,
+          "avgGoldEarned": 64,
+          "sourceRunIds": [
+            "run-v5-hard-expert-0-101",
+            "run-v5-hard-expert-1-211",
+            "run-v5-hard-expert-2-307",
+            "run-v5-hard-expert-3-401",
+            "run-v5-hard-expert-4-503"
+          ]
+        },
+        {
+          "waveIndex": 3,
+          "runs": 5,
+          "completedRuns": 0,
+          "completionRate": 0,
+          "avgStartingHp": 13,
+          "avgRemainingHp": 0,
+          "avgEnemiesSpawned": 16,
+          "avgEnemiesKilled": 4,
+          "avgEnemiesLeaked": 7,
+          "avgGoldSpent": 60,
+          "avgGoldEarned": 52,
+          "sourceRunIds": [
+            "run-v5-hard-expert-0-101",
+            "run-v5-hard-expert-1-211",
+            "run-v5-hard-expert-2-307",
+            "run-v5-hard-expert-3-401",
+            "run-v5-hard-expert-4-503"
+          ]
+        }
+      ]
+    }
+  ]
+}

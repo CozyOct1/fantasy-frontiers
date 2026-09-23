@@ -3,7 +3,7 @@ import { randomInt } from "node:crypto";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { campaignSpecSchema, enemyThemeSpecSchema, gameRunResultRequestSchema, gameRunStartRequestSchema, gameRunStartSchema, generationJobSchema, levelRecordSchema, playerProgressSchema, towerThemeSpecSchema, worldGenerationRequestSchema, worldSkinSchema, worldSpecSchema } from "@fantasy-frontiers/shared";
+import { campaignSpecSchema, enemyThemeSpecSchema, gameRunResultRequestSchema, gameRunStartRequestSchema, gameRunStartSchema, generationJobSchema, levelRecordSchema, mapDraftSchema, playerProgressSchema, towerThemeSpecSchema, worldGenerationRequestSchema, worldSkinSchema, worldSpecSchema } from "@fantasy-frontiers/shared";
 import { AppStore } from "./store.js";
 import { DeepSeekClient } from "./deepseek.js";
 import { CreativeWorkflow } from "./creative-workflow.js";
@@ -12,7 +12,7 @@ import { renderEvaluationMarkdown } from "./evaluation-markdown.js";
 
 const envPath = fileURLToPath(new URL("../../../.env", import.meta.url));
 const json = (response: ServerResponse, status: number, body: unknown) => {
-  response.writeHead(status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "access-control-allow-origin": "http://127.0.0.1:5173", "access-control-allow-methods": "GET,POST,OPTIONS", "access-control-allow-headers": "content-type" });
+  response.writeHead(status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "access-control-allow-origin": "http://127.0.0.1:5173", "access-control-allow-methods": "GET,POST,PUT,OPTIONS", "access-control-allow-headers": "content-type" });
   response.end(JSON.stringify(body));
 };
 const markdown = (response: ServerResponse, filename: string, body: string) => {
@@ -31,12 +31,13 @@ async function readJson(request: IncomingMessage): Promise<unknown> {
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 
-export function createAppServer(store: AppStore, workflow?: CreativeWorkflow, evaluationWorkflow?: EvaluationWorkflow): Server {
+export function createAppServer(store: AppStore, workflow?: CreativeWorkflow, evaluationWorkflow?: EvaluationWorkflow, options: { enableMapEditor?: boolean } = {}): Server {
+  const editorEnabled = options.enableMapEditor ?? process.env.ENABLE_MAP_EDITOR === "1";
   return createServer(async (request, response) => {
     const url = new URL(request.url ?? "/", "http://localhost");
     const parts = url.pathname.split("/").filter(Boolean).map(decodeURIComponent);
     try {
-      if (request.method === "OPTIONS") { response.writeHead(204, { "access-control-allow-origin": "http://127.0.0.1:5173", "access-control-allow-methods": "GET,POST,OPTIONS", "access-control-allow-headers": "content-type" }); return response.end(); }
+      if (request.method === "OPTIONS") { response.writeHead(204, { "access-control-allow-origin": "http://127.0.0.1:5173", "access-control-allow-methods": "GET,POST,PUT,OPTIONS", "access-control-allow-headers": "content-type" }); return response.end(); }
       if (request.method === "GET" && url.pathname === "/health") return json(response, 200, { status: "ok", service: "fantasy-frontiers-server" });
       if (request.method === "GET" && url.pathname === "/api/worlds") {
         const worlds = store.listWorlds().map(world => worldSpecSchema.parse(world));
@@ -108,6 +109,33 @@ export function createAppServer(store: AppStore, workflow?: CreativeWorkflow, ev
       if (request.method === "GET" && url.pathname === "/api/generation-jobs") {
         return json(response, 200, { jobs: store.listGenerations().map(job => generationJobSchema.parse(job)) });
       }
+      if (parts[0] === "api" && parts[1] === "editor") {
+        if (!editorEnabled) return json(response, 404, { error: "not_found" });
+        if (request.method === "GET" && parts[2] === "map-drafts" && parts.length === 3) {
+          return json(response, 200, { drafts: store.listMapDrafts() });
+        }
+        if (request.method === "POST" && parts[2] === "map-drafts" && parts.length === 3) {
+          const draft = store.createMapDraft(mapDraftSchema.parse(await readJson(request)));
+          return json(response, 201, { draft });
+        }
+        if (request.method === "GET" && parts[2] === "map-drafts" && parts.length === 4) {
+          const draft = store.getMapDraft(parts[3]!); return draft ? json(response, 200, { draft }) : json(response, 404, { error: "draft_not_found" });
+        }
+        if (request.method === "PUT" && parts[2] === "map-drafts" && parts.length === 4) {
+          const body = await readJson(request) as { expectedRevision?: unknown; draft?: unknown };
+          if (!Number.isInteger(body.expectedRevision)) return json(response, 400, { error: "invalid_request" });
+          const draft = store.saveMapDraft(parts[3]!, body.expectedRevision as number, body.draft);
+          return json(response, 200, { draft });
+        }
+        if (request.method === "POST" && parts[2] === "map-drafts" && parts[4] === "validate" && parts.length === 5) {
+          const validation = store.validateMapDraft(parts[3]!); return validation ? json(response, 200, validation) : json(response, 404, { error: "draft_not_found" });
+        }
+        if (request.method === "POST" && parts[2] === "map-drafts" && parts[4] === "publish" && parts.length === 5) {
+          const body = await readJson(request) as { expectedRevision?: unknown };
+          if (!Number.isInteger(body.expectedRevision)) return json(response, 400, { error: "invalid_request" });
+          return json(response, 201, { revision: store.publishMapDraft(parts[3]!, body.expectedRevision as number) });
+        }
+      }
       if (request.method === "POST" && parts[0] === "api" && parts[1] === "generation-jobs" && parts[3] === "retry" && parts.length === 4) {
         if (!workflow) return json(response, 503, { error: "creative_workflow_unavailable" });
         const job = workflow.retry(parts[2]!);
@@ -121,7 +149,15 @@ export function createAppServer(store: AppStore, workflow?: CreativeWorkflow, ev
         const body = gameRunStartRequestSchema.parse(await readJson(request));
         const started = store.startRun(parts[2]!, body.playerId ?? "local-player", body.seed);
         if (!started) return json(response, 404, { error: "level_not_found" });
-        return json(response, 201, gameRunStartSchema.parse({ runId: started.runId, levelId: started.level.id, seed: started.seed, map: { ...started.level.map, seed: started.seed } }));
+        return json(response, 201, gameRunStartSchema.parse({
+          runId: started.runId,
+          levelId: started.level.id,
+          seed: started.seed,
+          map: { ...started.level.map, seed: started.seed },
+          wavePlan: started.level.wavePlan,
+          contentVersion: started.level.contentVersion,
+          rulesetVersion: started.level.rulesetVersion,
+        }));
       }
       if (request.method === "POST" && parts[0] === "api" && parts[1] === "levels" && parts[3] === "result" && parts.length === 4) {
         const body = gameRunResultRequestSchema.parse(await readJson(request));
@@ -146,6 +182,9 @@ export function createAppServer(store: AppStore, workflow?: CreativeWorkflow, ev
       if (message.startsWith("publish_gate_failed:")) return json(response, 409, { error: "publish_gate_failed", issues: message.slice("publish_gate_failed:".length).split(",") });
       if (message === "world_already_published") return json(response, 409, { error: message });
       if (message === "evaluation_already_running") return json(response, 409, { error: message });
+      if (message === "draft_revision_conflict" || message === "draft_id_mismatch") return json(response, 409, { error: message });
+      if (message === "draft_not_found") return json(response, 404, { error: message });
+      if (message.startsWith("draft_invalid:")) return json(response, 422, { error: "draft_invalid", issues: message.slice("draft_invalid:".length).split(",") });
       if (error instanceof SyntaxError || (error instanceof Error && error.name === "ZodError")) return json(response, 400, { error: "invalid_request", detail: message });
       console.error("API request failed", error);
       return json(response, 500, { error: "internal_error" });

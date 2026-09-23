@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { generateMap } from "../packages/maps/src/index.js";
 import {
   BASELINE_POLICY, BOT_POLICIES, EXPERT_POLICY, NOVICE_POLICY, SimulationError,
-  compareRuns, getBotPolicy, runBatch, runEpisode,
+  compareRuns, getBotPolicy, replayActionLog, runBatch, runEpisode,
 } from "../packages/simulator/src/index.js";
 import {
   calculateMetrics, calculateMetricsFromRuns, inspectResultDistribution, inspectTowerUsage, inspectWaveMetrics,
@@ -50,6 +50,14 @@ describe("Headless Simulator and fixed Bot policies", () => {
     expect(batch[0]?.result).toEqual(batch[2]?.result);
     expect(batch[0]?.id).not.toBe(batch[2]?.id);
     expect(batch.map(run => run.id)).toEqual(["run-replay-check-0-817", "run-replay-check-1-818", "run-replay-check-2-817"]);
+  });
+
+  it("replays a recorded action log through the same Game Core", () => {
+    const run = runEpisode({ map, seed: 817, policy: NOVICE_POLICY });
+    const replay = replayActionLog({ map, seed: 817, actions: run.actions });
+    expect(replay.result).toEqual(run.result);
+    expect(replay.totalTicks).toBe(run.totalTicks);
+    expect(replay.verifiedActions).toBe(run.actions.length);
   });
 
   it("uses the same seed set for raw strategy comparisons", () => {

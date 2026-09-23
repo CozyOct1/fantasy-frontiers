@@ -53,6 +53,23 @@ describe("pure deterministic Game Core", () => {
     expect(engine.state.towers[0]?.level).toBe(2);
   });
 
+  it("sells towers only between waves with a Core-owned configured refund", () => {
+    const engine = createGameEngine({ map, seed: 22 });
+    const placed = engine.dispatch({ type: "placeTower", archetype: "basic", position: map.buildSlots[0]! });
+    expect(placed.accepted).toBe(true);
+    if (!placed.accepted || placed.events[0]?.type !== "towerPlaced") return;
+    const towerId = placed.events[0].towerId;
+    const goldAfterBuild = engine.state.gold;
+    const sold = engine.dispatch({ type: "sellTower", towerId });
+    expect(sold).toMatchObject({ accepted: true, events: [{ type: "towerSold", towerId, refund: Math.floor(GAME_CONFIG.towers.basic.cost * GAME_CONFIG.economy.sellRatio) }] });
+    expect(engine.state.towers).toHaveLength(0);
+    expect(engine.state.gold).toBe(goldAfterBuild + Math.floor(GAME_CONFIG.towers.basic.cost * GAME_CONFIG.economy.sellRatio));
+    const second = engine.dispatch({ type: "placeTower", archetype: "basic", position: map.buildSlots[0]! });
+    if (!second.accepted || second.events[0]?.type !== "towerPlaced") return;
+    engine.dispatch({ type: "startWave" });
+    expect(engine.dispatch({ type: "sellTower", towerId: second.events[0].towerId })).toMatchObject({ accepted: false, reason: "Towers can only be sold between waves" });
+  });
+
   it("uses a fixed tick and pause does not advance the simulation", () => {
     const engine = createGameEngine({ map, seed: 3 });
     engine.dispatch({ type: "startWave" });
@@ -83,5 +100,22 @@ describe("pure deterministic Game Core", () => {
     expect(engine.state.status).toBe("lost");
     expect(engine.result()).toMatchObject({ win: false, remainingHp: 0, enemiesLeaked: expect.any(Number) });
     expect(gameResultSchema.safeParse(engine.result()).success).toBe(true);
+  });
+
+  it("executes an authored WavePlan with deterministic path and tick timing", () => {
+    const pathId = map.paths[0]!.id;
+    const engine = createGameEngine({
+      map, seed: 5,
+      wavePlan: { version: 1, id: "test-plan", tickRate: GAME_CONFIG.simulation.tickRate, waves: [{ index: 1, label: "timing", events: [
+        { tick: 0, archetype: "normal", pathId }, { tick: 20, archetype: "fast", pathId },
+      ] }] },
+    });
+    expect(engine.state.totalWaves).toBe(1);
+    expect(engine.dispatch({ type: "startWave" }).accepted).toBe(true);
+    expect(engine.step().some(event => event.type === "enemySpawned" && event.pathId === pathId)).toBe(true);
+    for (let index = 0; index < 19; index++) engine.step();
+    expect(engine.state.stats.enemiesSpawned).toBe(1);
+    engine.step();
+    expect(engine.state.stats.enemiesSpawned).toBe(2);
   });
 });

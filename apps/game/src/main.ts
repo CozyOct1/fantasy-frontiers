@@ -1,8 +1,9 @@
 import Phaser from "phaser";
 import { type GameEngine, type GameEvent } from "@fantasy-frontiers/core";
-import { GAME_CONFIG, type Coordinate, type Difficulty, type EvaluationRecord, type GameAction, type GameResult, type LevelRecord, type MapSpec, type TowerArchetype, type WorldSkin, type WorldSpec } from "@fantasy-frontiers/shared";
-import { generateMap } from "@fantasy-frontiers/maps";
+import { GAME_CONFIG, mapSpecSchema, wavePlanSchema, type Coordinate, type Difficulty, type EvaluationRecord, type GameAction, type GameResult, type LevelRecord, type MapSpec, type TowerArchetype, type WavePlan, type WorldSkin, type WorldSpec } from "@fantasy-frontiers/shared";
+import { createBenchmarkContent, createWavePlanDraftForMap, generateMap } from "@fantasy-frontiers/maps";
 import { ScreenFlow, type AppScreen } from "./app/screen-flow";
+import { appUrl } from "./app/app-url";
 import { createBoardProjection, type BoardProjection } from "./game/board-projection";
 import { createGameplayController, type GameplayController } from "./game/gameplay-controller";
 import { resolveWorldSkin } from "./presentation/world-skin-resolver";
@@ -15,31 +16,48 @@ import { footprintDiamond, getIsometricPlacement, placeIsometricSprite, type Iso
 import { mountAssetCalibrationPage } from "./presentation/asset-calibration-scene";
 import { createFantasyScene, prefersReducedMotion } from "./presentation/fantasy-scene";
 import { ENEMY_ANIMATION_FRAMES, ENEMY_ANIMATION_FRAME_MS } from "./presentation/fantasy-asset-config";
+import { resolveStorybookRealm, towerBrief, hasFloatingComposition, scenicChannelColumn } from "./presentation/storybook-realms";
+import { AudioDirector, type AudioPreferences } from "./presentation/audio-director";
 import "./style.css";
 
 const difficultySeeds: Record<Difficulty, number> = { easy: 70421, medium: 70422, hard: 70423 };
 const debugRenderMode = new URLSearchParams(window.location.search).get("debugRender") === "1";
 const assetCalibrationMode = window.location.pathname.endsWith("/dev/assets") || new URLSearchParams(window.location.search).get("assetCalibration") === "1";
+const editorPreviewMode = new URLSearchParams(window.location.search).get("mapPreview") === "1";
+function loadEditorPreview(): { map: MapSpec; wavePlan: WavePlan } | null {
+  if (!editorPreviewMode) return null;
+  try {
+    const value = JSON.parse(localStorage.getItem("fantasy-frontiers.level-preview.v1") ?? "null") as { map?: unknown; wavePlan?: unknown } | null;
+    if (value?.map && value.wavePlan) return { map: mapSpecSchema.parse(value.map), wavePlan: wavePlanSchema.parse(value.wavePlan) };
+    const map = mapSpecSchema.parse(JSON.parse(localStorage.getItem("fantasy-frontiers.map-preview.v1") ?? "null"));
+    return { map, wavePlan: wavePlanSchema.parse(createWavePlanDraftForMap(map, `${map.id}-preview-waves`)) };
+  } catch { return null; }
+}
+const editorPreview = loadEditorPreview();
+const editorPreviewMap = editorPreview?.map ?? null;
 const difficultyNames: Record<Difficulty, string> = { easy: "简单", medium: "普通", hard: "困难" };
 const defaultTowerNames: Record<TowerArchetype, string> = { basic: "弩塔", aoe: "爆裂塔", slow: "霜缚塔", heavy: "重炮塔" };
 function createDemoMap(difficulty: Difficulty): MapSpec {
+  if (!editorPreviewMap) return createBenchmarkContent(difficulty, `frontier-${difficulty}`).map;
   const generated = generateMap({ difficulty, seed: difficultySeeds[difficulty] });
   if (generated.ok === false) throw new Error(`Unable to load the ${difficulty} demo map: ${generated.message}`);
   return generated.map;
 }
 
-let currentDifficulty: Difficulty = "easy";
-let currentMap = createDemoMap(currentDifficulty);
-let currentWorldId = "frontier-world";
-let currentWorldName = "边境哨站";
+let currentDifficulty: Difficulty = editorPreviewMap?.difficulty ?? "easy";
+let currentMap = editorPreviewMap ?? createDemoMap(currentDifficulty);
+let currentWorldId = editorPreviewMap ? "editor-preview" : "frontier-world";
+let currentWorldName = editorPreviewMap ? "地图工坊试玩" : "边境哨站";
 let currentEnemyNames = "";
 let currentLevels: Record<Difficulty, LevelRecord> = Object.fromEntries((Object.keys(difficultyNames) as Difficulty[]).map(difficulty => {
-  const map = createDemoMap(difficulty);
+  const content = createBenchmarkContent(difficulty, `frontier-${difficulty}`);
+  const map = content.map;
   const id = `frontier-${difficulty}`;
-  return [difficulty, { id, worldId: currentWorldId, difficulty, name: `${currentWorldName} · ${difficultyNames[difficulty]}`, story: "", map: { ...map, id } }];
+  return [difficulty, { id, worldId: currentWorldId, difficulty, name: `${currentWorldName} · ${difficultyNames[difficulty]}`, story: "", map: { ...map, id }, wavePlan: content.wavePlan, contentVersion: 1, rulesetVersion: "v1.0.0" }];
 })) as Record<Difficulty, LevelRecord>;
+if (editorPreviewMap && editorPreview) currentLevels[currentDifficulty] = { id: editorPreviewMap.id, worldId: currentWorldId, difficulty: currentDifficulty, name: "地图工坊试玩", story: "试玩不会写入正式战役进度。", map: editorPreviewMap, wavePlan: editorPreview.wavePlan, contentVersion: 1, rulesetVersion: "v1.0.0" };
 
-let engine: GameplayController = createGameplayController({ map: currentMap, levelId: `frontier-${currentDifficulty}`, seed: currentMap.seed });
+let engine: GameplayController = createGameplayController({ map: currentMap, levelId: `frontier-${currentDifficulty}`, seed: currentMap.seed, ...(currentLevels[currentDifficulty].wavePlan ? { wavePlan: currentLevels[currentDifficulty].wavePlan } : {}) });
 let selectedArchetype: TowerArchetype | null = null;
 let selectedTowerId: string | null = null;
 let selectedBuildSlot: Coordinate | null = null;
@@ -53,6 +71,7 @@ let currentSkin = resolveWorldSkin("fantasy");
 let currentWorldAssets = resolveWorldAssets(currentWorldId);
 const apiBase = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? "/fantasy-frontiers" : "http://127.0.0.1:3001");
 let game: Phaser.Game | undefined;
+let audioDirector: AudioDirector | undefined;
 const screenFlow = new ScreenFlow((screen: AppScreen) => {
   document.querySelectorAll<HTMLElement>("section[data-app-screen]").forEach(element => {
     const active = element.dataset.appScreen === screen;
@@ -60,6 +79,7 @@ const screenFlow = new ScreenFlow((screen: AppScreen) => {
     element.setAttribute("aria-hidden", String(!active));
   });
   document.body.dataset.appScreen = screen;
+  audioDirector?.setScene(screen === "hub" ? "lobby" : screen === "result" ? "result" : engine?.state.status === "running" ? "battle" : "deployment");
   if (screen === "gameplay") requestAnimationFrame(resizeGameToStage);
 });
 
@@ -122,7 +142,22 @@ const ui = {
   towerContextLevel: document.querySelector<HTMLElement>("#tower-context-level")!,
   towerContextDamage: document.querySelector<HTMLElement>("#tower-context-damage")!,
   towerContextRange: document.querySelector<HTMLElement>("#tower-context-range")!,
+  towerContextSpeed: document.querySelector<HTMLElement>("#tower-context-speed")!,
+  towerContextRole: document.querySelector<HTMLElement>("#tower-context-role")!,
   towerContextCost: document.querySelector<HTMLElement>("#tower-context-cost")!,
+  sell: document.querySelector<HTMLButtonElement>("#sell-button")!,
+  waveBrief: document.querySelector<HTMLElement>("#wave-brief")!,
+  waveBriefTitle: document.querySelector<HTMLElement>("#wave-brief-title")!,
+  waveBriefCopy: document.querySelector<HTMLElement>("#wave-brief-copy")!,
+  guide: document.querySelector<HTMLElement>("#battle-guide")!,
+  guideStep: document.querySelector<HTMLElement>("#battle-guide-step")!,
+  guideTitle: document.querySelector<HTMLElement>("#battle-guide-title")!,
+  guideCopy: document.querySelector<HTMLElement>("#battle-guide-copy")!,
+  guideNext: document.querySelector<HTMLButtonElement>("#battle-guide-next")!,
+  guideSkip: document.querySelector<HTMLButtonElement>("#battle-guide-skip")!,
+  resultLeakFact: document.querySelector<HTMLElement>("#result-leak-fact")!,
+  resultEconomyFact: document.querySelector<HTMLElement>("#result-economy-fact")!,
+  resultActionFact: document.querySelector<HTMLElement>("#result-action-fact")!,
   waveBanner: document.querySelector<HTMLElement>("#wave-banner")!,
   feedback: document.querySelector<HTMLElement>("#battle-feedback")!,
   nextLevel: document.querySelector<HTMLButtonElement>("#next-level")!,
@@ -132,6 +167,8 @@ type KnownWorld = { spec: WorldSpec; levels: LevelRecord[]; evaluations: ListedE
 const knownWorlds = new Map<string, KnownWorld>();
 let unlockedLevelIds = new Set<string>();
 let feedbackSequence = 0;
+let battleLeaks: Array<Extract<GameEvent, { type: "enemyLeaked" }>> = [];
+let guideStep = 0;
 const pollingJobs = new Set<string>();
 const pollingEvaluations = new Set<string>();
 type HubView = "menu" | "play" | "studio" | "generate" | "evaluation" | "settings";
@@ -157,13 +194,19 @@ function showHubView(view: HubView): void {
 function renderCreatorWorlds(): void {
   const list = document.querySelector<HTMLElement>("#generation-world-list")!;
   list.replaceChildren();
-  const heading = document.createElement("h3"); heading.textContent = "已有世界"; list.append(heading);
+  const heading = document.createElement("h3"); heading.textContent = "世界档案"; list.append(heading);
+  const statusLabels: Record<WorldSpec["status"], string> = { draft: "草稿", generating: "塑造中", generated: "待评测", evaluating: "评测中", ready: "可守护", published: "已发布", failed: "需要修复" };
   for (const world of knownWorlds.values()) {
     const row = document.createElement("article"); row.className = "creator-world-row";
     const copy = document.createElement("div");
     const title = document.createElement("strong"); title.textContent = world.spec.name;
-    const status = document.createElement("small"); status.textContent = `${world.spec.status} · ${world.levels.length}/3 关`;
-    copy.append(title, status); row.append(copy); list.append(row);
+    const tags = document.createElement("small"); tags.textContent = world.spec.visualKeywords.slice(0, 3).join(" · ") || world.spec.themeFamily;
+    const progress = document.createElement("div"); progress.className = "archive-progress";
+    const status = document.createElement("span"); status.textContent = statusLabels[world.spec.status];
+    const levelCount = document.createElement("span"); levelCount.textContent = `${world.levels.length}/3 关`;
+    const meter = document.createElement("progress"); meter.max = 3; meter.value = Math.min(3, world.levels.length); meter.setAttribute("aria-label", `${world.spec.name}档案完成度`);
+    progress.append(status, levelCount, meter);
+    copy.append(title, tags); row.append(copy, progress); list.append(row);
   }
 }
 
@@ -186,21 +229,38 @@ function renderEvaluationDetail(worldId: string): void {
   const known = knownWorlds.get(worldId); if (!known) return;
   selectedEvaluationWorldId = worldId;
   const panel = document.querySelector<HTMLElement>("#evaluation-detail")!; panel.hidden = false;
-  document.querySelector<HTMLElement>("#evaluation-title")!.textContent = `${known.spec.name} · 评测`;
+  document.querySelector<HTMLElement>("#evaluation-title")!.textContent = known.spec.name;
   const running = known.evaluations.some(record => record.status === "queued" || record.status === "running");
   const start = document.querySelector<HTMLButtonElement>("#evaluation-start")!;
   start.disabled = running; start.textContent = running ? "评测进行中…" : known.evaluations.length ? "重新评测" : "开始评测";
   const download = document.querySelector<HTMLAnchorElement>("#evaluation-download")!;
   download.hidden = !known.evaluations.some(record => record.status === "completed" && record.report);
   download.href = `${apiBase}/api/worlds/${encodeURIComponent(worldId)}/evaluation-report.md`;
-  document.querySelector<HTMLElement>("#evaluation-status")!.textContent = "评测将运行 Easy、Medium、Hard，并保留 Simulator 实验 Trace 与指标报告。";
+  document.querySelector<HTMLElement>("#evaluation-status")!.textContent = "报告基于 Easy、Medium、Hard 的确定性模拟证据；展开卡片可查看详细结论。";
   const reports = document.querySelector<HTMLElement>("#evaluation-report-list")!; reports.replaceChildren();
   const latestByLevel = new Map<string, ListedEvaluation>();
   for (const evaluation of [...known.evaluations].sort((a, b) => a.createdAt.localeCompare(b.createdAt))) latestByLevel.set(evaluation.levelId, evaluation);
+  const completedReports = [...latestByLevel.values()].flatMap(evaluation => evaluation.report ? [evaluation.report] : []);
+  const average = (values: number[]): number => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+  const scores = [
+    { label: "策略强度", value: average(completedReports.map(report => report.metrics.winRate)) },
+    { label: "资源效率", value: average(completedReports.map(report => report.metrics.resourceUtilization)) },
+    { label: "防守稳定", value: average(completedReports.map(report => 1 - report.metrics.leakRate)) },
+  ];
+  const totalScore = average(scores.map(score => score.value));
+  document.querySelector<HTMLElement>("#evaluation-grade")!.textContent = completedReports.length === 0 ? "—" : totalScore >= .85 ? "S" : totalScore >= .7 ? "A" : totalScore >= .55 ? "B" : totalScore >= .4 ? "C" : "D";
+  const scorecards = document.querySelector<HTMLElement>("#evaluation-scorecards")!; scorecards.replaceChildren();
+  for (const score of scores) {
+    const card = document.createElement("article");
+    const label = document.createElement("span"); label.textContent = score.label;
+    const value = document.createElement("strong"); value.textContent = completedReports.length ? `${Math.round(score.value * 100)}` : "—";
+    const meter = document.createElement("progress"); meter.max = 1; meter.value = completedReports.length ? score.value : 0; meter.setAttribute("aria-label", score.label);
+    card.append(label, value, meter); scorecards.append(card);
+  }
   for (const difficulty of ["easy", "medium", "hard"] as const) {
     const level = known.levels.find(item => item.difficulty === difficulty); if (!level) continue;
-    const evaluation = latestByLevel.get(level.id); const card = document.createElement("article"); card.className = "evaluation-report";
-    const title = document.createElement("h3"); title.textContent = `${difficultyNames[difficulty]} · ${level.name}`;
+    const evaluation = latestByLevel.get(level.id); const card = document.createElement("details"); card.className = "evaluation-report";
+    const title = document.createElement("summary"); title.textContent = `${difficultyNames[difficulty]} · ${level.name}`;
     const copy = document.createElement("p"); copy.textContent = evaluation?.report
       ? `${evaluation.report.summary} 胜率 ${(evaluation.report.metrics.winRate * 100).toFixed(0)}% · ${evaluation.report.runIds.length} 次运行`
       : evaluation ? `评测${evaluation.status}${evaluation.error ? `：${evaluation.error}` : ""}` : "尚无评测报告。";
@@ -211,6 +271,7 @@ function renderEvaluationDetail(worldId: string): void {
 async function beginPersistentRun(): Promise<void> {
   activeRunId = null;
   resultRunId = null;
+  if (editorPreviewMode) return;
   try {
     const response = await fetch(`${apiBase}/api/levels/${encodeURIComponent(currentLevels[currentDifficulty].id)}/start`, {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ playerId: "local-player", seed: currentMap.seed }),
@@ -225,6 +286,7 @@ async function beginPersistentRun(): Promise<void> {
 }
 
 async function saveGameResult(result: GameResult): Promise<void> {
+  if (editorPreviewMode) return;
   if (!activeRunId || resultRunId === activeRunId) return;
   const runId = activeRunId;
   resultRunId = runId;
@@ -262,6 +324,18 @@ async function refreshWorldLibrary(): Promise<void> {
       return { world, detail };
     }));
     knownWorlds.clear();
+    const completedWorlds = worldDetails.filter(entry => entry && entry.detail.levels.length > 0 && entry.detail.levels.every(level => progress.some(record => record.levelId === level.id && record.completed))).length;
+    const completedLevels = worldDetails.reduce((sum, entry) => sum + (entry?.detail.levels.filter(level => progress.some(record => record.levelId === level.id && record.completed)).length ?? 0), 0);
+    const totalLevels = worldDetails.reduce((sum, entry) => sum + (entry?.detail.levels.length ?? 0), 0);
+    const activeEntry = worldDetails.find(entry => entry && entry.detail.levels.some(level => !progress.some(record => record.levelId === level.id && record.completed))) ?? worldDetails.find(Boolean);
+    const activeLevel = activeEntry?.detail.levels.find(level => !progress.some(record => record.levelId === level.id && record.completed)) ?? activeEntry?.detail.levels.at(-1);
+    document.querySelector("#lobby-world-name")!.textContent = activeEntry?.world.name ?? "边境哨站";
+    document.querySelector("#lobby-chapter")!.textContent = activeLevel ? `第 ${Math.max(1, activeEntry!.detail.levels.indexOf(activeLevel) + 1)} 章` : "战役待命";
+    document.querySelector("#lobby-mission")!.textContent = activeLevel?.name ?? "等待新的号角";
+    document.querySelector("#lobby-progress-value")!.textContent = `${completedLevels} / ${totalLevels}`;
+    const lobbyProgress = document.querySelector<HTMLProgressElement>("#lobby-progress")!;
+    lobbyProgress.max = Math.max(1, totalLevels); lobbyProgress.value = completedLevels;
+    document.querySelector("#lobby-state")!.textContent = `已守护 ${completedWorlds} 个世界 · ${Object.keys(GAME_CONFIG.towers).length} 类防御塔可用`;
     for (const entry of worldDetails) {
       if (!entry) continue;
       const { world, detail } = entry;
@@ -269,13 +343,23 @@ async function refreshWorldLibrary(): Promise<void> {
       const card = document.createElement("article"); card.className = "world-card";
       const thumbnail = document.createElement("div"); thumbnail.className = "world-thumbnail";
       thumbnail.setAttribute("role", "img"); thumbnail.setAttribute("aria-label", `${world.name}世界封面`);
-      const variant = ["nature", "ocean", "sci_fi"].includes(world.themeFamily) ? 1 : ["dark_fantasy", "steampunk"].includes(world.themeFamily) ? 2 : 0;
-      thumbnail.append(createFantasyScene(true, variant));
+      const realm = resolveStorybookRealm(world);
+      card.dataset.realm = realm.id;
+      const floating = hasFloatingComposition(world);
+      thumbnail.append(createFantasyScene(true, realm.variant, floating));
       const copy = document.createElement("div");
       const title = document.createElement("strong"); title.textContent = world.name;
-      const summary = document.createElement("span"); summary.textContent = world.summary;
+      const summary = document.createElement("span"); summary.className = "world-card-summary"; summary.textContent = world.summary;
       copy.append(title, summary);
+      const themeLabel = document.createElement("p"); themeLabel.className = "realm-label";
+      themeLabel.textContent = `✦ ${floating ? "云上群岛" : realm.name}`;
       const completed = detail.levels.filter(level => progress.some(record => record.levelId === level.id && record.completed)).length;
+      const metadata = document.createElement("div"); metadata.className = "world-card-meta";
+      const difficulty = document.createElement("span"); difficulty.textContent = `难度 ${"★".repeat(Math.max(1, Math.min(3, detail.levels.length)))}${"☆".repeat(Math.max(0, 3 - detail.levels.length))}`;
+      const enemyLabel = document.createElement("span"); enemyLabel.className = "world-enemies"; enemyLabel.setAttribute("aria-label", `敌人：${detail.enemyTheme?.entries.map(entry => entry.name).join("、") || "普通、迅捷、重甲、首领"}`); enemyLabel.textContent = "敌人  ♟  ➶  ◆  ♛";
+      const worldState = document.createElement("span"); worldState.className = `world-state state-${completed === detail.levels.length && completed > 0 ? "stable" : completed > 0 ? "active" : "unknown"}`; worldState.textContent = completed === detail.levels.length && completed > 0 ? "稳定" : completed > 0 ? "探索中" : "等待探索";
+      metadata.append(difficulty, enemyLabel, worldState);
+      copy.append(themeLabel, metadata);
       const completion = document.createElement("div"); completion.className = "progress-caption";
       completion.textContent = `战役进度 · ${completed} / ${detail.levels.length} 关`;
       const meter = document.createElement("progress"); meter.max = Math.max(1, detail.levels.length); meter.value = completed;
@@ -289,7 +373,7 @@ async function refreshWorldLibrary(): Promise<void> {
         badge.textContent = `${difficultyNames[level.difficulty]} ${record?.completed ? "✓" : record?.unlocked ? "可玩" : "锁定"}`;
         levels.append(badge);
       }
-      const detailButton = document.createElement("button"); detailButton.className = "world-select"; detailButton.type = "button"; detailButton.textContent = "选择关卡";
+      const detailButton = document.createElement("button"); detailButton.className = "world-select"; detailButton.type = "button"; detailButton.textContent = completed > 0 && completed < detail.levels.length ? "继续探索" : "进入世界";
       detailButton.disabled = world.status !== "ready" && world.status !== "generated" && world.status !== "published";
       detailButton.addEventListener("click", () => void prepareWorld(world.id).then(ready => { if (ready) renderWorldDetail(world.id); }));
       const actions = document.createElement("div"); actions.className = "world-card-actions"; actions.append(detailButton);
@@ -308,6 +392,10 @@ async function refreshWorldLibrary(): Promise<void> {
     });
   } catch {
     ui.worldList.textContent = "本地存档服务暂不可用；示例关卡仍可直接游玩。";
+    document.querySelector("#lobby-world-name")!.textContent = "边境哨站";
+    document.querySelector("#lobby-chapter")!.textContent = "离线战役";
+    document.querySelector("#lobby-mission")!.textContent = "守住第一道防线";
+    document.querySelector("#lobby-state")!.textContent = "战役记录暂不可用 · 4 类塔可用";
   }
 }
 
@@ -420,7 +508,7 @@ async function prepareWorld(worldId: string, difficulty = currentDifficulty): Pr
   currentDifficulty = difficulty;
   currentLevels = levels;
   currentMap = currentLevels[currentDifficulty].map;
-  engine = createGameplayController({ map: currentMap, levelId: currentLevels[currentDifficulty].id, seed: currentMap.seed });
+  engine = createGameplayController({ map: currentMap, levelId: currentLevels[currentDifficulty].id, seed: currentMap.seed, ...(currentLevels[currentDifficulty].wavePlan ? { wavePlan: currentLevels[currentDifficulty].wavePlan } : {}) });
   selectedTowerId = null;
   selectedArchetype = null;
   selectedBuildSlot = null;
@@ -439,6 +527,9 @@ async function prepareWorld(worldId: string, difficulty = currentDifficulty): Pr
   });
   currentSkin = resolveWorldSkin(world.spec.themeFamily, world.skin);
   currentWorldAssets = resolveWorldAssets(world.skin?.assetWorldId ?? worldId);
+  const realm = resolveStorybookRealm(world.spec);
+  currentWorldAssets.manifest.battlefieldPalette = { ...realm.palette };
+  document.querySelector<HTMLElement>("#gameplay-screen")!.dataset.realm = realm.id;
   document.documentElement.dataset.themeFamily = world.spec.themeFamily;
   document.documentElement.dataset.themePack = currentSkin.packId;
   document.documentElement.style.setProperty("--theme-primary", currentSkin.skin.colors.primary);
@@ -559,6 +650,54 @@ function showFeedback(text: string, kind: "gain" | "damage" | "banner" = "gain")
   window.setTimeout(() => item.remove(), kind === "banner" ? 1900 : 1200);
 }
 
+const towerRoles: Record<TowerArchetype, string> = {
+  basic: "低成本稳定单体输出，适合前期铺设。",
+  aoe: "攻击汇聚敌群，密集波次收益更高。",
+  slow: "延长敌人在火力区停留时间，需要其他塔配合。",
+  heavy: "高单发远射程，适合重甲与首领。",
+};
+
+function towerRefund(tower: GameEngine["state"]["towers"][number]): number {
+  const definition = GAME_CONFIG.towers[tower.archetype];
+  let investment = definition.cost;
+  for (let level = 1; level < tower.level; level++) investment += Math.ceil(definition.upgradeCost * definition.upgradeMultiplier ** (level - 1));
+  return Math.floor(investment * GAME_CONFIG.economy.sellRatio);
+}
+
+const guideKey = "fantasy-frontiers.onboarding.v1";
+const guideSteps = [
+  { title: "观察战场", copy: "裂隙是敌人入口，道路通往必须守住的堡垒。", action: "开始部署" },
+  { title: "选择防御塔", copy: "选择一座塔，查看职责、费用和覆盖范围。", action: "等待选择" },
+  { title: "部署防线", copy: "点击发光石台建造。合法位置会显示范围，金币不足会明确提示。", action: "等待建造" },
+  { title: "主动开波", copy: "阅读下一波敌军与入口情报，准备好后再开波。", action: "等待开波" },
+] as const;
+
+function renderGuide(): void {
+  const completed = localStorage.getItem(guideKey) === "complete" || currentDifficulty !== "easy" || editorPreviewMode;
+  ui.guide.hidden = completed;
+  if (completed) return;
+  const step = guideSteps[Math.min(guideStep, guideSteps.length - 1)]!;
+  ui.guideStep.textContent = `${guideStep + 1} / ${guideSteps.length}`;
+  ui.guideTitle.textContent = step.title;
+  ui.guideCopy.textContent = step.copy;
+  ui.guideNext.textContent = step.action;
+  ui.guideNext.disabled = guideStep > 0;
+  ui.guide.dataset.passive = guideStep > 0 ? "true" : "false";
+}
+
+function advanceGuide(trigger: "start" | "towerSelected" | "towerPlaced" | "waveStarted"): void {
+  if (localStorage.getItem(guideKey) === "complete" || currentDifficulty !== "easy") return;
+  if (trigger === "start" && guideStep === 0) guideStep = 1;
+  if (trigger === "towerSelected" && guideStep <= 1) guideStep = 2;
+  if (trigger === "towerPlaced" && guideStep <= 2) guideStep = 3;
+  if (trigger === "waveStarted") {
+    localStorage.setItem(guideKey, "complete");
+    ui.guide.hidden = true;
+    return;
+  }
+  renderGuide();
+}
+
 function send(action: GameAction): GameEvent[] {
   const result = engine.dispatch(action);
   if (result.accepted) {
@@ -569,6 +708,7 @@ function send(action: GameAction): GameEvent[] {
     else if (statusEvent) message = statusEvent.status === "paused" ? "战斗已暂停。" : "战斗继续。";
     consumeBattleEvents(result.events);
   } else message = result.reason;
+  if (!result.accepted) void audioDirector?.play("ui-error");
   boardScene?.renderState();
   renderHud();
   return result.events;
@@ -579,43 +719,70 @@ function consumeBattleEvents(events: readonly GameEvent[]): void {
     if (event.type === "towerPlaced") {
       showFeedback("防御塔部署成功 · ✦", "gain");
       boardScene?.showPlacementEffect(event.position);
+      void audioDirector?.play("build");
+      advanceGuide("towerPlaced");
     }
     else if (event.type === "towerUpgraded") {
       const tower = engine.state.towers.find(item => item.id === event.towerId);
       if (tower) boardScene?.showUpgradeEffect(tower.position, event.level);
       showFeedback(`升级完成 · Lv.${event.level}`);
+      void audioDirector?.play("ui-confirm");
     }
-    else if (event.type === "towerFired") boardScene?.showProjectile(event);
+    else if (event.type === "towerSold") {
+      showFeedback(`已拆除 · 返还 ${event.refund} 金币`, "gain");
+      selectedTowerId = null;
+      void audioDirector?.play("coin");
+    }
+    else if (event.type === "towerFired") {
+      boardScene?.showProjectile(event);
+      void audioDirector?.play(`tower-${event.archetype}`);
+    }
     else if (event.type === "enemyKilled") {
       boardScene?.showDeathEffect(event.position, event.reward);
+      void audioDirector?.play("coin");
     }
     else if (event.type === "enemyLeaked") {
+      battleLeaks.push(event);
       showFeedback(`基地受损 −${event.damage}`, "damage");
-      boardScene?.showBaseHitEffect();
+      if (loadSettings().screenShake) boardScene?.showBaseHitEffect();
       document.querySelector(".battle-hud")?.classList.add("base-hit");
       window.setTimeout(() => document.querySelector(".battle-hud")?.classList.remove("base-hit"), 420);
+      audioDirector?.duckMusic();
+      void audioDirector?.play("base-hit");
     }
     else if (event.type === "statusChanged" && event.status === "running") {
       ui.waveBanner.textContent = `第 ${engine.state.waveIndex} 波来袭`;
       ui.waveBanner.hidden = false;
       boardScene?.showWaveStartEffect();
       window.setTimeout(() => { ui.waveBanner.hidden = true; }, 1900);
+      audioDirector?.setScene("battle");
+      void audioDirector?.play("wave-start");
+      advanceGuide("waveStarted");
+    }
+    else if (event.type === "statusChanged" && event.status === "ready") audioDirector?.setScene("deployment");
+    else if (event.type === "statusChanged" && (event.status === "won" || event.status === "lost")) {
+      audioDirector?.setScene("result");
+      audioDirector?.duckMusic(800);
+      void audioDirector?.play(event.status === "won" ? "victory" : "defeat");
     }
   }
 }
 
 function restart(enterGame = true): void {
-  engine = createGameplayController({ map: currentMap, levelId: currentLevels[currentDifficulty].id, seed: currentMap.seed });
+  engine = createGameplayController({ map: currentMap, levelId: currentLevels[currentDifficulty].id, seed: currentMap.seed, ...(currentLevels[currentDifficulty].wavePlan ? { wavePlan: currentLevels[currentDifficulty].wavePlan } : {}) });
   selectedArchetype = null;
   selectedTowerId = null;
   selectedBuildSlot = null;
   presentedResultKey = null;
   gameSpeed = 1;
+  battleLeaks = [];
+  guideStep = 0;
   message = "新一局已准备。选择防御塔并部署。";
   if (enterGame) screenFlow.show("gameplay");
-  boardScene.renderState();
+  boardScene?.renderState();
   renderHud();
   if (enterGame) void beginPersistentRun();
+  if (enterGame) renderGuide();
 }
 
 function setDifficulty(difficulty: Difficulty): void {
@@ -627,7 +794,7 @@ function setDifficulty(difficulty: Difficulty): void {
   }
   currentDifficulty = difficulty;
   currentMap = currentLevels[difficulty].map;
-  engine = createGameplayController({ map: currentMap, levelId: currentLevels[difficulty].id, seed: currentMap.seed });
+  engine = createGameplayController({ map: currentMap, levelId: currentLevels[difficulty].id, seed: currentMap.seed, ...(currentLevels[difficulty].wavePlan ? { wavePlan: currentLevels[difficulty].wavePlan } : {}) });
   selectedArchetype = null;
   selectedTowerId = null;
   selectedBuildSlot = null;
@@ -657,11 +824,26 @@ function renderHud(): void {
   ui.hp.textContent = `${state.hp} / ${state.maxHp}`;
   ui.gold.textContent = `${state.gold}`;
   ui.wave.textContent = `${state.waveIndex} / ${state.totalWaves}`;
-  ui.message.textContent = message;
+  const plannedWave = currentLevels[currentDifficulty].wavePlan?.waves[state.waveIndex];
+  const briefing = state.status === "ready" && plannedWave ? (() => {
+    const counts = Object.entries(Object.fromEntries(["normal", "fast", "tank", "boss"].map(type => [type, plannedWave.events.filter(event => event.archetype === type).length]))).filter(([, count]) => count > 0).map(([type, count]) => `${({ normal: "普通", fast: "迅捷", tank: "重甲", boss: "首领" } as Record<string, string>)[type]}×${count}`).join(" · ");
+    return `下一波：${plannedWave.label || `第 ${plannedWave.index} 波`} · ${counts} · ${new Set(plannedWave.events.map(event => event.pathId)).size} 个入口`;
+  })() : "";
+  const contextualMessage = [briefing, message].filter(Boolean).join("\n");
+  ui.message.textContent = selectedArchetype ? `${towerBrief(selectedArchetype)}\n${contextualMessage}` : contextualMessage;
+  ui.waveBrief.hidden = state.status !== "ready" || !plannedWave;
+  if (plannedWave) {
+    const enemyNames: Record<string, string> = { normal: "普通", fast: "迅捷", tank: "重甲", boss: "首领" };
+    const counts = ["normal", "fast", "tank", "boss"].map(type => ({ type, count: plannedWave.events.filter(event => event.archetype === type).length })).filter(item => item.count > 0);
+    ui.waveBriefTitle.textContent = plannedWave.label || `第 ${plannedWave.index} 波`;
+    ui.waveBriefCopy.textContent = `${counts.map(item => `${enemyNames[item.type]} ×${item.count}`).join(" · ")} · ${new Set(plannedWave.events.map(event => event.pathId)).size} 个入口`;
+  }
   ui.nextWave.disabled = state.status !== "ready" || state.waveIndex >= state.totalWaves;
   const waveLabel = ui.nextWave.querySelector("span");
-  if (waveLabel) waveLabel.textContent = state.waveIndex === 0 ? "开始第一波" : "开始下一波";
-  else ui.nextWave.textContent = state.waveIndex === 0 ? "开始第一波" : "开始下一波";
+  const waveActionLabel = plannedWave?.label ? `开始 · ${plannedWave.label}` : state.waveIndex === 0 ? "开始第一波" : "开始下一波";
+  if (waveLabel) waveLabel.textContent = waveActionLabel;
+  else ui.nextWave.textContent = waveActionLabel;
+  ui.nextWave.setAttribute("aria-label", state.waveIndex === 0 ? "开始第一波" : "开始下一波");
   ui.pause.disabled = state.status !== "running";
   ui.pauseOverlay.hidden = state.status !== "paused";
   const speedLabel = ui.speed.querySelector("span");
@@ -677,21 +859,36 @@ function renderHud(): void {
     ui.towerContextLevel.textContent = `Lv.${tower.level}`;
     ui.towerContextDamage.textContent = `${Math.round(stats.damage * stats.upgradeMultiplier ** (tower.level - 1))}`;
     ui.towerContextRange.textContent = `${stats.range}`;
+    ui.towerContextSpeed.textContent = `${stats.attackSpeed.toFixed(2)} / 秒`;
+    ui.towerContextRole.textContent = towerRoles[tower.archetype];
     ui.towerContextCost.textContent = tower.level >= GAME_CONFIG.economy.maximumTowerLevel ? "已满级" : `${upgradeCost} 金币`;
+    const refund = towerRefund(tower);
+    ui.sell.textContent = `拆除并返还 ${refund}`;
+    ui.sell.disabled = state.status !== "ready";
+    ui.sell.title = state.status === "ready" ? `返还总投入的 ${Math.round(GAME_CONFIG.economy.sellRatio * 100)}%` : "只能在波次之间拆除";
     boardScene?.positionTowerContext(tower.position);
-  } else ui.upgrade.disabled = true;
+  } else { ui.upgrade.disabled = true; ui.sell.disabled = true; }
   const nextDifficulty = currentDifficulty === "easy" ? "medium" : currentDifficulty === "medium" ? "hard" : null;
   ui.nextLevel.hidden = !nextDifficulty || !unlockedLevelIds.has(currentLevels[nextDifficulty]?.id ?? "");
   document.querySelectorAll<HTMLButtonElement>("[data-archetype]").forEach(button => {
     const archetype = button.dataset.archetype as TowerArchetype;
     button.classList.toggle("selected", archetype === selectedArchetype);
-    button.disabled = state.gold < GAME_CONFIG.towers[archetype].cost || state.status === "won" || state.status === "lost";
+    button.classList.toggle("unaffordable", state.gold < GAME_CONFIG.towers[archetype].cost);
+    button.disabled = state.status === "won" || state.status === "lost" || state.status === "paused";
   });
 
   const result = engine.result();
   if (result) {
     ui.resultTitle.textContent = result.win ? "胜利 · 防线守住了" : "失败 · 基地失守";
     ui.resultCopy.textContent = `完成波次 ${result.waveReached}/${result.totalWaves} · 剩余生命 ${result.remainingHp} · 击退 ${result.enemiesKilled} 个敌人 · 剩余金币 ${result.remainingGold} · 获得金币 ${result.goldEarned} · 建塔 ${result.towersBuilt} 座`;
+    const firstLeak = battleLeaks[0];
+    const enemyNames: Record<string, string> = { normal: "普通敌人", fast: "迅捷敌人", tank: "重甲敌人", boss: "首领" };
+    ui.resultLeakFact.textContent = firstLeak ? `第 ${firstLeak.waveIndex} 波，${firstLeak.pathId} 首次漏过${enemyNames[firstLeak.archetype]}；本局共漏怪 ${result.enemiesLeaked} 个。` : "本局没有敌人漏过防线。";
+    ui.resultEconomyFact.textContent = `投入 ${result.goldSpent} 金币，战斗获得 ${result.goldEarned}，结束时保留 ${result.remainingGold}。`;
+    const acceptedActions = engine.actionLog.filter(record => record.accepted);
+    const sold = acceptedActions.filter(record => record.action.type === "sellTower").length;
+    const upgraded = acceptedActions.filter(record => record.action.type === "upgradeTower").length;
+    ui.resultActionFact.textContent = `有效操作 ${acceptedActions.length} 次：建塔 ${result.towersBuilt}、升级 ${upgraded}${sold > 0 ? `、拆除 ${sold}` : ""}。`;
     ui.pauseOverlay.hidden = true;
     ui.towerContext.hidden = true;
     screenFlow.show("result");
@@ -753,6 +950,12 @@ class BoardScene extends Phaser.Scene {
       const next = this.projection.cellAt({ x: pointer.x, y: pointer.y });
       if (next?.x === this.hoverCell?.x && next?.y === this.hoverCell?.y) return;
       this.hoverCell = next;
+      if (selectedArchetype && next) {
+        const occupied = engine.state.towers.some(tower => tower.position.x === next.x && tower.position.y === next.y);
+        const legal = currentMap.buildSlots.some(slot => slot.x === next.x && slot.y === next.y);
+        message = occupied ? "已建有防御塔 · 点击查看升级" : !legal ? "× 非建造位 · 道路与环境区域不可建造" : engine.state.gold < GAME_CONFIG.towers[selectedArchetype].cost ? "× 金币不足 · 可先查看射程" : "✓ 可以建造 · 点击部署";
+        renderHud();
+      }
       this.drawTerrain();
     });
     this.renderState();
@@ -1046,12 +1249,28 @@ class BoardScene extends Phaser.Scene {
       .lineTo(rightEdge.x, rightEdge.y + cliffHeight * .65).lineTo(bottomEdge.x, bottomEdge.y + cliffHeight).lineTo(leftEdge.x, leftEdge.y + cliffHeight * .65).closePath().fillPath();
     this.terrain.fillStyle(this.color(palette.groundPrimary), 1).beginPath().moveTo(topEdge.x, topEdge.y).lineTo(rightEdge.x, rightEdge.y).lineTo(bottomEdge.x, bottomEdge.y).lineTo(leftEdge.x, leftEdge.y).closePath().fillPath();
     this.terrain.lineStyle(2, this.color(palette.groundSecondary), .48).beginPath().moveTo(leftEdge.x, leftEdge.y).lineTo(bottomEdge.x, bottomEdge.y).lineTo(rightEdge.x, rightEdge.y).strokePath();
+    const realm = resolveStorybookRealm(knownWorlds.get(currentWorldId)?.spec);
+    // Cosmetic river / aether channel / fissure. Road crossings get bridge planks;
+    // no coordinates, collision, routes, or build legality are changed.
+    const channelX = scenicChannelColumn(currentMap);
+    for (let y = 0; y < currentMap.height; y++) {
+      const point = { x: channelX, y };
+      if (slots.has(`${channelX},${y}`) || spawns.has(`${channelX},${y}`) || (currentMap.base.x === channelX && currentMap.base.y === y)) continue;
+      this.drawDiamond(this.terrain, point, realm.water, .85, 1);
+      const center = this.project(point);
+      this.terrain.lineStyle(1, realm.accent, .55).lineBetween(center.x - 5, center.y, center.x + 6, center.y - 3);
+    }
     for (let y = 0; y < currentMap.height; y++) {
       for (let x = 0; x < currentMap.width; x++) {
         const point = { x, y };
         const key = `${x},${y}`;
         const center = this.project(point);
         const variation = (x * 37 + y * 61 + currentMap.seed) % 10;
+        if (!roadCells.has(key) && !slots.has(key) && x !== channelX && variation < 6) {
+          this.terrain.fillStyle(this.color(palette.groundSecondary), .2);
+          this.terrain.fillEllipse(center.x, center.y, this.projection.tileWidth * .85, this.projection.tileHeight * .55);
+          if (realm.id === "rift") this.terrain.lineStyle(1, 0x493b3f, .45).lineBetween(center.x - 5, center.y + 2, center.x + 6, center.y - 2);
+        }
         if (variation < 3 && !roadCells.has(key)) {
           this.terrain.lineStyle(1, this.color(palette.groundSecondary), .3);
           this.terrain.lineBetween(center.x - 3, center.y + 1, center.x - 1, center.y - 2);
@@ -1101,6 +1320,13 @@ class BoardScene extends Phaser.Scene {
         this.roads.lineStyle(1, this.color(palette.roadEdge), .5).lineBetween(seamX - normalX, seamY - normalY, seamX + normalX, seamY + normalY);
       }
       if (directions.length >= 3) this.roads.lineStyle(1.5, this.color(palette.roadEdge), .52).strokeCircle(center.x, center.y, roadWidth * .72);
+      if (x === channelX && !spawns.has(key) && !(currentMap.base.x === x && currentMap.base.y === y)) {
+        this.drawDiamond(this.roads, { x, y }, 0xb49a72, 1, 2);
+        for (const offset of [-.2, 0, .2]) {
+          const plank = this.project({ x: x + offset, y });
+          this.roads.lineStyle(2, 0x6b5743, .8).lineBetween(plank.x - this.projection.tileWidth * .2, plank.y + this.projection.tileHeight * .2, plank.x + this.projection.tileWidth * .2, plank.y - this.projection.tileHeight * .2);
+        }
+      }
     }
     const base = this.project(currentMap.base);
     const marker = (point: Phaser.Math.Vector2, label: string, color: string) => {
@@ -1124,8 +1350,9 @@ class BoardScene extends Phaser.Scene {
       }
       else { this.terrain.fillStyle(0x271d27, 0.85); this.terrain.fillEllipse(position.x, position.y + 3, 24, 12); this.terrain.lineStyle(3, 0xb76665, 0.95); this.terrain.strokeCircle(position.x, position.y - 2, 10); }
     }
-    const decorationAssets = ["propTree", "propRock", "propCrate", "propDecoration", "battlefieldLandmark"] as const;
-    for (const placement of createDecorationPlacements(currentMap, 8)) {
+    const decorationAssets: readonly WorldAssetName[] = realm.id === "forest" ? ["propTree", "propTree", "propRock", "propTree"] : realm.id === "crystal" ? ["propDecoration", "battlefieldLandmark", "propRock", "propDecoration"] : ["propRock", "propCrate", "propRock", "battlefieldLandmark"];
+    for (const placement of createDecorationPlacements(currentMap, 18)) {
+      if (placement.position.x === channelX) continue;
       const name = decorationAssets[placement.variant % decorationAssets.length]!; const key = currentWorldAssets.textureKey(name);
       if (!key || !this.textures.exists(key)) continue;
       const point = this.project(placement.position);
@@ -1140,12 +1367,24 @@ class BoardScene extends Phaser.Scene {
     if (this.hoverCell) {
       const legalSlot = currentMap.buildSlots.some(point => point.x === this.hoverCell!.x && point.y === this.hoverCell!.y);
       this.drawDiamond(this.dynamic, this.hoverCell, legalSlot ? 0xffd879 : 0xe6e0c2, legalSlot ? .12 : .055, 2);
+      if (selectedArchetype) {
+        const occupied = engine.state.towers.some(tower => tower.position.x === this.hoverCell!.x && tower.position.y === this.hoverCell!.y);
+        const canBuild = legalSlot && !occupied && engine.state.gold >= GAME_CONFIG.towers[selectedArchetype].cost;
+        this.drawDiamond(this.dynamic, this.hoverCell, canBuild ? 0xb9ed9b : 0xef8874, .35, 1);
+        if (legalSlot && !occupied) this.drawRange(this.hoverCell, GAME_CONFIG.towers[selectedArchetype].range, canBuild ? 0xb9ed9b : 0xef8874);
+      }
     }
     if (selectedBuildSlot) {
       const center = this.project(selectedBuildSlot);
       this.dynamic.lineStyle(2, 0xffd879, .9);
       this.dynamic.strokeEllipse(center.x, center.y - 2, this.projection.tileWidth * .42, this.projection.tileHeight * .29);
     }
+  }
+
+  private drawRange(point: Coordinate, range: number, color: number): void {
+    const vertices = Array.from({ length: 48 }, (_, i) => this.project({ x: point.x + Math.cos(i * Math.PI / 24) * range, y: point.y + Math.sin(i * Math.PI / 24) * range }));
+    this.dynamic.fillStyle(color, .045).lineStyle(1.5, color, .65);
+    this.dynamic.fillPoints(vertices, true).strokePoints(vertices, true);
   }
 
   private drawTower(id: string, point: Coordinate, archetype: TowerArchetype, level: number, selected: boolean): void {
@@ -1172,10 +1411,7 @@ class BoardScene extends Phaser.Scene {
     }
     if (selected) {
       const range = GAME_CONFIG.towers[archetype].range;
-      this.dynamic.fillStyle(0xffdf8b, .055);
-      this.dynamic.fillEllipse(center.x, center.y, this.projection.tileWidth * range * 1.2, this.projection.tileHeight * range * 1.2);
-      this.dynamic.lineStyle(2, 0xffe391, .72);
-      this.dynamic.strokeEllipse(center.x, center.y, this.projection.tileWidth * range * 1.2, this.projection.tileHeight * range * 1.2);
+      this.drawRange(point, range, 0xffe391);
       this.dynamic.lineStyle(2, 0xfff0ad, .95);
       this.dynamic.strokeEllipse(center.x, center.y, this.projection.tileWidth * .62, this.projection.tileHeight * .34);
     }
@@ -1252,6 +1488,12 @@ class BoardScene extends Phaser.Scene {
       return;
     }
     selectedBuildSlot = null;
+    if (selectedArchetype) {
+      message = "× 非建造位 · 请选择地图上的＋建造位";
+      this.drawTerrain();
+      renderHud();
+      return;
+    }
     selectedArchetype = null;
     message = "已取消建造位和防御塔选择。";
     this.drawTerrain();
@@ -1278,13 +1520,17 @@ function initializeGame(): void {
   window.addEventListener("resize", resizeGameToStage);
 }
 
-type LocalSettings = { provider: string; model: string; apiKey: string; masterVolume: number; musicVolume: number; effectsVolume: number; language: string; reducedMotion: boolean };
+type LocalSettings = { provider: string; model: string; apiKey: string; masterVolume: number; musicVolume: number; effectsVolume: number; muted: boolean; reduceIntenseAudio: boolean; language: string; reducedMotion: boolean; screenShake: boolean };
 const settingsKey = "fantasy-frontiers.settings.v1";
-const defaultSettings: LocalSettings = { provider: "deepseek", model: "deepseek-chat", apiKey: "", masterVolume: 80, musicVolume: 70, effectsVolume: 85, language: "zh-CN", reducedMotion: false };
+const defaultSettings: LocalSettings = { provider: "deepseek", model: "deepseek-chat", apiKey: "", masterVolume: 80, musicVolume: 70, effectsVolume: 85, muted: false, reduceIntenseAudio: false, language: "zh-CN", reducedMotion: false, screenShake: true };
 
 function loadSettings(): LocalSettings {
   try { return { ...defaultSettings, ...JSON.parse(localStorage.getItem(settingsKey) ?? "{}") as Partial<LocalSettings> }; }
   catch { return defaultSettings; }
+}
+
+function audioPreferences(value = loadSettings()): AudioPreferences {
+  return { masterVolume: value.masterVolume, musicVolume: value.musicVolume, effectsVolume: value.effectsVolume, muted: value.muted, reduceIntenseAudio: value.reduceIntenseAudio };
 }
 
 function populateSettings(): void {
@@ -1295,10 +1541,28 @@ function populateSettings(): void {
   (document.querySelector<HTMLInputElement>("#settings-master-volume")!).value = String(value.masterVolume);
   (document.querySelector<HTMLInputElement>("#settings-music-volume")!).value = String(value.musicVolume);
   (document.querySelector<HTMLInputElement>("#settings-effects-volume")!).value = String(value.effectsVolume);
+  (document.querySelector<HTMLInputElement>("#settings-muted")!).checked = value.muted;
+  (document.querySelector<HTMLInputElement>("#settings-reduce-intense-audio")!).checked = value.reduceIntenseAudio;
   (document.querySelector<HTMLSelectElement>("#settings-language")!).value = value.language;
   (document.querySelector<HTMLInputElement>("#settings-reduced-motion")!).checked = value.reducedMotion;
+  (document.querySelector<HTMLInputElement>("#settings-screen-shake")!).checked = value.screenShake;
   document.documentElement.classList.toggle("reduce-motion", value.reducedMotion);
 }
+
+audioDirector = new AudioDirector(audioPreferences());
+const unlockAudio = (): void => {
+  void audioDirector?.unlock().then(unlocked => {
+    const status = document.querySelector<HTMLElement>("#audio-status");
+    if (status) status.textContent = unlocked ? "声音已启用。若浏览器静音，游戏仍保持完整视觉反馈。" : "浏览器未允许声音；游戏将保持静默运行。";
+  });
+};
+document.addEventListener("pointerdown", unlockAudio, { once: true, capture: true });
+document.addEventListener("keydown", unlockAudio, { once: true, capture: true });
+document.addEventListener("visibilitychange", () => { void audioDirector?.setSuspended(document.hidden); });
+document.addEventListener("click", event => {
+  const button = (event.target as HTMLElement).closest("button, a.button, .studio-tool-card");
+  if (button && !(button as HTMLButtonElement).disabled) void audioDirector?.play("ui-click");
+});
 
 document.querySelector(".main-menu-view")!.prepend(createFantasyScene());
 document.documentElement.style.setProperty("--fantasy-frame", `url("${getLocalGameAssetUrl("ff.realm.panel")}")`);
@@ -1307,9 +1571,17 @@ populateSettings();
 document.querySelectorAll<HTMLButtonElement>("[data-archetype]").forEach(button => {
   button.addEventListener("click", () => {
     const archetype = button.dataset.archetype as TowerArchetype;
+    if (selectedArchetype === archetype) {
+      selectedArchetype = null;
+      message = "已取消部署选择。";
+      renderHud(); boardScene?.renderState(); boardScene?.changeMap();
+      return;
+    }
     selectedArchetype = archetype;
     selectedTowerId = null;
     message = `已选择${button.dataset.label}，点击地图上的建造位进行部署。`;
+    advanceGuide("towerSelected");
+    void audioDirector?.play("ui-select");
     if (selectedBuildSlot) {
       const slot = selectedBuildSlot;
       selectedBuildSlot = null;
@@ -1322,6 +1594,15 @@ document.querySelectorAll<HTMLButtonElement>("[data-archetype]").forEach(button 
 });
 document.querySelectorAll<HTMLButtonElement>("[data-difficulty]").forEach(button => {
   button.addEventListener("click", () => setDifficulty(button.dataset.difficulty as Difficulty));
+});
+document.querySelectorAll<HTMLButtonElement>("[data-prompt-fragment]").forEach(button => {
+  button.addEventListener("click", () => {
+    const fragment = button.dataset.promptFragment ?? "";
+    const current = ui.worldPrompt.value.trim();
+    ui.worldPrompt.value = current ? `${current}，${fragment}` : `一个以${fragment}为主题的幻想世界`;
+    ui.worldPrompt.focus();
+    button.classList.add("selected");
+  });
 });
 ui.worldForm.addEventListener("submit", async event => {
   event.preventDefault();
@@ -1345,7 +1626,7 @@ ui.worldForm.addEventListener("submit", async event => {
       : `创建请求失败：${error instanceof Error ? error.message : "未知错误"}`;
   } finally {
     ui.worldCreateButton.disabled = false;
-    ui.worldCreateButton.textContent = "生成世界";
+    ui.worldCreateButton.textContent = "创造世界";
   }
 });
 ui.nextWave.addEventListener("click", () => send({ type: "startWave" }));
@@ -1354,18 +1635,29 @@ ui.pauseResume.addEventListener("click", () => send({ type: "resume" }));
 ui.pauseReturn.addEventListener("click", () => { showHubView("play"); renderWorldDetail(currentWorldId); });
 ui.speed.addEventListener("click", () => { gameSpeed = gameSpeed === 1 ? 2 : 1; renderHud(); });
 ui.upgrade.addEventListener("click", () => { if (selectedTowerId) send({ type: "upgradeTower", towerId: selectedTowerId }); });
+ui.sell.addEventListener("click", () => {
+  if (!selectedTowerId) return;
+  const tower = engine.state.towers.find(candidate => candidate.id === selectedTowerId);
+  if (!tower) return;
+  const refund = towerRefund(tower);
+  if (!window.confirm(`拆除这座塔并返还 ${refund} 金币？`)) return;
+  send({ type: "sellTower", towerId: selectedTowerId });
+});
+ui.guideNext.addEventListener("click", () => advanceGuide("start"));
+ui.guideSkip.addEventListener("click", () => { localStorage.setItem(guideKey, "complete"); ui.guide.hidden = true; });
 ui.restart.addEventListener("click", () => restart());
 ui.replayLevel.addEventListener("click", () => {
   restart();
 });
-ui.returnLevels.addEventListener("click", () => returnToSelection("levels"));
-ui.returnWorlds.addEventListener("click", () => returnToSelection("world"));
+ui.returnLevels.addEventListener("click", () => { if (editorPreviewMode) location.href = appUrl("map-editor.html"); else returnToSelection("levels"); });
+ui.returnWorlds.addEventListener("click", () => { if (editorPreviewMode) location.href = appUrl("map-editor.html"); else returnToSelection("world"); });
 ui.nextLevel.addEventListener("click", () => {
   const next = currentDifficulty === "easy" ? "medium" : currentDifficulty === "medium" ? "hard" : null;
   if (next) void enterGameplay(currentWorldId, next);
 });
 ui.playSelectedLevel.addEventListener("click", () => { void enterGameplay(currentWorldId, currentDifficulty); });
 ui.leaveGameplay.addEventListener("click", () => {
+  if (editorPreviewMode) { location.href = appUrl("map-editor.html"); return; }
   if (!window.confirm("退出当前关卡？本局尚未完成的战绩不会保存。")) return;
   if (engine.state.status === "running") send({ type: "pause" });
   showHubView("play");
@@ -1395,12 +1687,29 @@ document.querySelector<HTMLFormElement>("#settings-form")!.addEventListener("sub
     masterVolume: Number(document.querySelector<HTMLInputElement>("#settings-master-volume")!.value),
     musicVolume: Number(document.querySelector<HTMLInputElement>("#settings-music-volume")!.value),
     effectsVolume: Number(document.querySelector<HTMLInputElement>("#settings-effects-volume")!.value),
+    muted: document.querySelector<HTMLInputElement>("#settings-muted")!.checked,
+    reduceIntenseAudio: document.querySelector<HTMLInputElement>("#settings-reduce-intense-audio")!.checked,
     language: document.querySelector<HTMLSelectElement>("#settings-language")!.value,
     reducedMotion: document.querySelector<HTMLInputElement>("#settings-reduced-motion")!.checked,
+    screenShake: document.querySelector<HTMLInputElement>("#settings-screen-shake")!.checked,
   };
   localStorage.setItem(settingsKey, JSON.stringify(value));
   document.documentElement.classList.toggle("reduce-motion", value.reducedMotion);
+  audioDirector?.updatePreferences(audioPreferences(value));
   document.querySelector<HTMLElement>("#settings-status")!.textContent = "设置已保存在当前浏览器。";
+});
+document.querySelectorAll<HTMLInputElement>("#settings-master-volume, #settings-music-volume, #settings-effects-volume, #settings-muted, #settings-reduce-intense-audio").forEach(input => {
+  input.addEventListener("input", () => {
+    const current = loadSettings();
+    audioDirector?.updatePreferences({
+      ...audioPreferences(current),
+      masterVolume: Number(document.querySelector<HTMLInputElement>("#settings-master-volume")!.value),
+      musicVolume: Number(document.querySelector<HTMLInputElement>("#settings-music-volume")!.value),
+      effectsVolume: Number(document.querySelector<HTMLInputElement>("#settings-effects-volume")!.value),
+      muted: document.querySelector<HTMLInputElement>("#settings-muted")!.checked,
+      reduceIntenseAudio: document.querySelector<HTMLInputElement>("#settings-reduce-intense-audio")!.checked,
+    });
+  });
 });
 document.addEventListener("keydown", event => {
   if (screenFlow.current !== "gameplay") return;
@@ -1430,7 +1739,11 @@ if (assetCalibrationMode) {
   mountAssetCalibrationPage(new URLSearchParams(window.location.search).get("world") ?? "frontier-outpost");
 } else {
   renderHud();
-  showHubView("menu");
-  void refreshWorldLibrary();
+  if (editorPreviewMap) {
+    ui.leaveGameplay.setAttribute("aria-label", "返回地图工坊"); ui.returnLevels.textContent = "返回编辑器"; ui.returnWorlds.hidden = true; ui.nextLevel.hidden = true;
+    ui.levelLabel.textContent = `${currentLevels[currentDifficulty].name} · ${engine.state.totalWaves} 波`;
+    initializeGame(); screenFlow.show("gameplay"); restart();
+  }
+  else { showHubView("menu"); void refreshWorldLibrary(); }
 }
-window.addEventListener("pagehide", () => game?.destroy(true), { once: true });
+window.addEventListener("pagehide", () => { game?.destroy(true); audioDirector?.destroy(); }, { once: true });

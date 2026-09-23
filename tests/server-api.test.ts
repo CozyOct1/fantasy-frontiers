@@ -5,6 +5,7 @@ import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
 import { createAppServer } from "../apps/server/src/server.js";
 import { AppStore } from "../apps/server/src/store.js";
+import { createBenchmarkContent, draftFromMap } from "../packages/maps/src/index.js";
 
 const openStores: AppStore[] = [];
 const servers: ReturnType<typeof createAppServer>[] = [];
@@ -15,9 +16,9 @@ afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) rmSync(directory, { recursive: true, force: true });
 });
 
-async function startApi(databasePath = ":memory:") {
+async function startApi(databasePath = ":memory:", enableMapEditor = false) {
   const store = new AppStore(databasePath); openStores.push(store);
-  const server = createAppServer(store); servers.push(server);
+  const server = createAppServer(store, undefined, undefined, { enableMapEditor }); servers.push(server);
   await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
   const address = server.address() as AddressInfo;
   return { store, base: `http://127.0.0.1:${address.port}` };
@@ -65,5 +66,25 @@ describe("server SQLite API", () => {
     const progress = await fetch(`${restarted.base}/api/progress?playerId=local-player`).then(response => response.json()) as { progress: { levelId: string; completed: boolean; unlocked: boolean; bestRemainingHp: number | null }[] };
     expect(progress.progress.find(entry => entry.levelId === "frontier-easy")).toMatchObject({ completed: true, bestRemainingHp: 24 });
     expect(progress.progress.find(entry => entry.levelId === "frontier-medium")?.unlocked).toBe(true);
+  });
+
+  it("keeps editor writes disabled by default and publishes immutable draft revisions when enabled", async () => {
+    const closed = await startApi();
+    expect((await fetch(`${closed.base}/api/editor/map-drafts/example`)).status).toBe(404);
+    const { base } = await startApi(":memory:", true);
+    const draft = draftFromMap(createBenchmarkContent("easy").map, "editor-api-test");
+    const created = await fetch(`${base}/api/editor/map-drafts`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(draft) });
+    expect(created.status).toBe(201);
+    const listed = await fetch(`${base}/api/editor/map-drafts`).then(response => response.json()) as { drafts: { id: string }[] };
+    expect(listed.drafts.map(item => item.id)).toContain(draft.id);
+    const saved = await fetch(`${base}/api/editor/map-drafts/${draft.id}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ expectedRevision: 0, draft: { ...draft, name: "弯道守望" } }) });
+    expect(saved.status).toBe(200);
+    const conflict = await fetch(`${base}/api/editor/map-drafts/${draft.id}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ expectedRevision: 0, draft }) });
+    expect(conflict.status).toBe(409);
+    const published = await fetch(`${base}/api/editor/map-drafts/${draft.id}/publish`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ expectedRevision: 1 }) });
+    expect(published.status).toBe(201);
+    await expect(published.clone().json()).resolves.toMatchObject({ revision: { wavePlan: { waves: expect.any(Array) } } });
+    const replay = await fetch(`${base}/api/editor/map-drafts/${draft.id}/publish`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ expectedRevision: 1 }) });
+    expect(await replay.json()).toEqual(await published.clone().json().catch(() => ({})));
   });
 });

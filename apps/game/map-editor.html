@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>幻想防线 · 地图工坊</title></head>
+  <body class="map-editor-page">
+    <main class="map-editor-shell">
+      <header class="editor-header">
+        <div><p class="eyebrow">INTERNAL LEVEL WORKSHOP</p><h1>地图工坊</h1><p>编辑空间规则与敌军波次。只有完整校验通过的关卡才能试玩或发布。</p></div>
+        <div class="editor-header-actions"><span id="editor-save-state" class="editor-badge">未保存</span><span id="editor-server-state" class="editor-badge muted">正在检测服务…</span><a class="button secondary" href="./">返回游戏</a></div>
+      </header>
+      <nav class="editor-tabs" aria-label="编辑内容"><button id="editor-tab-map" class="selected" type="button">地图布局</button><button id="editor-tab-waves" type="button">敌军波次</button></nav>
+      <section class="editor-layout">
+        <aside class="editor-panel">
+          <label>地图名称<input id="editor-name" maxlength="80" /></label>
+          <label>难度<select id="editor-difficulty"><option value="easy">简单</option><option value="medium">普通</option><option value="hard">困难</option></select></label>
+          <label>Seed<input id="editor-seed" type="number" min="0" step="1" /></label>
+          <label>设计备注<textarea id="editor-notes" maxlength="600" rows="4"></textarea></label>
+          <button id="editor-template" class="editor-wide-action" type="button">载入当前难度官方模板</button>
+          <h2>地图工具</h2>
+          <div class="editor-tools" role="toolbar" aria-label="地图工具">
+            <button type="button" data-editor-tool="base">🏰 基地</button><button type="button" data-editor-tool="spawn">🌀 入口</button><button type="button" data-editor-tool="path">▰ 路径</button>
+            <button type="button" data-editor-tool="build">＋ 塔位</button><button type="button" data-editor-tool="obstacle">◆ 障碍</button><button type="button" data-editor-tool="erase">⌫ 擦除</button>
+          </div>
+          <label>当前路径<select id="editor-path" aria-label="当前绘制路径"></select></label>
+          <div class="editor-history"><button type="button" id="editor-undo">撤销</button><button type="button" id="editor-redo">重做</button><button type="button" id="editor-new">新建</button></div>
+          <section class="editor-sync" aria-labelledby="editor-sync-title">
+            <h2 id="editor-sync-title">草稿与发布</h2>
+            <label>服务器草稿<select id="editor-draft-list"><option value="">本地草稿</option></select></label>
+            <div class="editor-sync-actions"><button type="button" id="editor-load-server">读取</button><button type="button" id="editor-save-server">同步</button><button type="button" id="editor-validate-server">校验</button><button type="button" id="editor-publish">发布版本</button></div>
+            <p id="editor-sync-message">服务器不可用时仍可在本机编辑、导入导出和试玩。</p>
+          </section>
+          <div class="editor-actions"><button type="button" id="editor-save">保存到本机</button><button type="button" id="editor-export">导出 JSON</button><label class="editor-import">导入 JSON<input id="editor-import" type="file" accept="application/json" /></label><button type="button" class="primary" id="editor-preview">试玩关卡</button></div>
+        </aside>
+        <section class="editor-canvas-panel">
+          <section id="editor-map-view">
+            <div class="editor-view-heading"><div><p class="eyebrow">SPATIAL RULES</p><h2>地图布局</h2></div><p>先放置入口和基地，再逐格绘制相邻路径；塔位不能覆盖道路。</p></div>
+            <div class="editor-legend"><span>🏰 基地</span><span>🌀 入口</span><span>▰ 路径</span><span>＋ 塔位</span><span>◆ 障碍</span></div>
+            <div id="editor-grid" class="editor-grid" role="grid" aria-label="12乘8地图网格"></div>
+          </section>
+          <section id="editor-wave-view" hidden>
+            <div class="editor-view-heading"><div><p class="eyebrow">ENCOUNTER TIMELINE</p><h2>敌军波次</h2></div><div><button type="button" id="editor-wave-template">生成基准波次</button><button type="button" id="editor-wave-add">＋ 添加波次</button></div></div>
+            <div class="wave-editor-layout">
+              <nav id="editor-wave-list" class="editor-wave-list" aria-label="波次列表"></nav>
+              <section class="wave-editor-detail">
+                <div id="editor-wave-empty">选择或添加一个波次开始编排。</div>
+                <div id="editor-wave-form" hidden>
+                  <div class="wave-form-heading"><label>波次名称<input id="editor-wave-label" maxlength="80" /></label><button type="button" id="editor-wave-delete" class="danger">删除波次</button></div>
+                  <p id="editor-wave-summary"></p>
+                  <fieldset class="wave-batch"><legend>添加敌军批次</legend><label>敌人<select id="editor-enemy-type"><option value="normal">普通</option><option value="fast">迅捷</option><option value="tank">重甲</option><option value="boss">首领</option></select></label><label>路线<select id="editor-enemy-path"></select></label><label>数量<input id="editor-enemy-count" type="number" min="1" max="40" value="4" /></label><label>开始秒<input id="editor-enemy-start" type="number" min="0" step="0.1" value="0" /></label><label>间隔秒<input id="editor-enemy-interval" type="number" min="0.1" step="0.1" value="0.8" /></label><button type="button" id="editor-wave-batch-add">加入波次</button></fieldset>
+                  <div class="wave-event-table" role="table" aria-label="敌军生成事件"><div class="wave-event-head" role="row"><span>时间</span><span>敌人</span><span>路线</span><span>操作</span></div><div id="editor-wave-events"></div></div>
+                </div>
+              </section>
+            </div>
+          </section>
+          <footer class="editor-validation"><p id="editor-status" role="status"></p><ol id="editor-issues" class="editor-issues"></ol></footer>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="/src/editor/main.ts"></script>
+  </body>
+</html>

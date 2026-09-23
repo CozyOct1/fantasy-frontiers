@@ -16,7 +16,7 @@ test("client and local server bootstrap", async ({ page, request }) => {
   await expect(page.locator("#gameplay-screen")).toBeHidden();
   await expect(page.locator("#game-root canvas")).toBeHidden();
   await page.locator("#menu-play").click();
-  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: /进入世界|继续探索/ }).first().click();
   await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
   await expect(page.locator("#game-status")).toContainText("部署阶段");
@@ -44,7 +44,7 @@ test("player can open creation tools and return to adventure", async ({ page }) 
   await page.getByRole("button", { name: "返回创意工坊" }).click();
   await page.getByRole("button", { name: "返回主菜单" }).click();
   await page.locator("#menu-play").click();
-  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: /进入世界|继续探索/ }).first().click();
   await expect(page.locator("#detail-levels")).toContainText("EASY");
   await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
@@ -62,7 +62,7 @@ test("player can enter a saved published world without calling world generation"
   page.on("request", request => { if (request.method() === "POST" && request.url().includes("generation")) generationRequested = true; });
   await page.goto("/");
   await page.locator("#menu-play").click();
-  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: /进入世界|继续探索/ }).first().click();
   await expect(page.locator("#world-detail")).toBeVisible();
   await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
@@ -75,7 +75,7 @@ test("player can enter a saved published world without calling world generation"
 test("application fills desktop and phone viewports without page scrolling", async ({ page }) => {
   await page.goto("/");
   await page.locator("#menu-play").click();
-  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: /进入世界|继续探索/ }).first().click();
   await page.getByRole("button", { name: "开始挑战" }).first().click();
 
   const stage = page.locator(".game-stage");
@@ -115,7 +115,7 @@ test("player can build, upgrade, start, pause, and restart an Easy game", async 
   test.setTimeout(60_000);
   await page.goto("/");
   await page.locator("#menu-play").click();
-  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: /进入世界|继续探索/ }).first().click();
   const canvas = page.locator("#game-root canvas");
   await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(canvas).toBeVisible();
@@ -179,7 +179,7 @@ test("player can build, upgrade, start, pause, and restart an Easy game", async 
 test("Easy, Medium, and Hard all enter the shared Gameplay screen", async ({ page }) => {
   await page.goto("/");
   await page.locator("#menu-play").click();
-  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: /进入世界|继续探索/ }).first().click();
   page.on("dialog", dialog => dialog.accept());
   for (const [index, difficulty] of [[0, "EASY"], [1, "MEDIUM"], [2, "HARD"]] as const) {
     await page.locator("#detail-levels button").nth(index).click();
@@ -193,7 +193,7 @@ test("Easy, Medium, and Hard all enter the shared Gameplay screen", async ({ pag
 test("Pause overlay resumes the same running battle and speed control toggles", async ({ page }) => {
   await page.goto("/");
   await page.locator("#menu-play").click();
-  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: /进入世界|继续探索/ }).first().click();
   await page.getByRole("button", { name: "开始挑战" }).first().click();
   await page.locator("#wave-button").click();
   await expect(page.locator("#game-status")).toContainText("战斗进行中");
@@ -212,7 +212,7 @@ test("reduced motion keeps the battle readable and running", async ({ page }) =>
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await page.locator("#menu-play").click();
-  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: /进入世界|继续探索/ }).first().click();
   await page.getByRole("button", { name: "开始挑战" }).first().click();
   await expect(page.locator("#game-root canvas")).toBeVisible();
   await page.locator("#wave-button").click();
@@ -227,7 +227,7 @@ test("an enemy leak produces visible base damage feedback", async ({ page }) => 
   test.setTimeout(45_000);
   await page.goto("/");
   await page.locator("#menu-play").click();
-  await page.getByRole("button", { name: "选择关卡" }).first().click();
+  await page.getByRole("button", { name: /进入世界|继续探索/ }).first().click();
   await page.getByRole("button", { name: "开始挑战" }).first().click();
   await page.locator("#speed-button").click();
   await page.locator("#wave-button").click();

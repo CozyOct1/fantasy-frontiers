@@ -58,7 +58,13 @@ class ReadOnlyEvaluationTools implements EvaluationTools {
     if (!level) throw new Error("level_not_found");
     const validation = validateMapSpec(level.map);
     if (!validation.valid) throw new Error("evaluation_map_invalid");
-    const result = runBatch({ map: level.map, seeds, policy: getBotPolicy(policyId), batchId: `${this.evaluationId}-${policyId}` });
+    const result = runBatch({
+      map: level.map,
+      seeds,
+      policy: getBotPolicy(policyId),
+      batchId: `${this.evaluationId}-${policyId}`,
+      ...(level.wavePlan ? { wavePlan: level.wavePlan } : {}),
+    });
     for (const run of result) this.runs.set(run.id, run);
     return result;
   }

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "licensePolicy": "runtime-local-only",
+  "packs": [
+    { "id": "kenney-interface-sounds", "license": "CC0-1.0", "source": "https://kenney.nl/assets/interface-sounds" },
+    { "id": "kenney-rpg-audio", "license": "CC0-1.0", "source": "https://kenney.nl/assets/rpg-audio" },
+    { "id": "oga-iremos-forest", "license": "CC0-1.0", "source": "https://opengameart.org/content/iremos-forest-theme-loop" },
+    { "id": "oga-heartfelt-battle", "license": "CC0-1.0", "source": "https://opengameart.org/content/heartfelt-battle-loopable-fantasy-stringspianohorn" },
+    { "id": "oga-forest-ambience", "license": "CC0-1.0", "source": "https://opengameart.org/content/forest-ambience" }
+  ],
+  "assets": [
+    { "id": "ambience-forest", "file": "runtime/ambience-forest.mp3", "pack": "oga-forest-ambience", "sourceFile": "forest-ambience.mp3", "purpose": "lobby ambience", "durationSeconds": 44.76, "loop": true },
+    { "id": "music-lobby", "file": "runtime/music-lobby.ogg", "pack": "oga-iremos-forest", "sourceFile": "Iremos_Forest_Theme_Loop.ogg", "purpose": "lobby and deployment music", "durationSeconds": 25.612, "loop": true },
+    { "id": "music-battle", "file": "runtime/music-battle.ogg", "pack": "oga-heartfelt-battle", "sourceFile": "Heartfelt_Battle.ogg", "purpose": "battle music", "durationSeconds": 153.6, "loop": true },
+    { "id": "ui-click", "file": "runtime/ui-click.ogg", "pack": "kenney-interface-sounds", "sourceFile": "Audio/click_002.ogg", "purpose": "generic UI press", "durationSeconds": 0.01, "loop": false },
+    { "id": "ui-close", "file": "runtime/ui-close.ogg", "pack": "kenney-interface-sounds", "sourceFile": "Audio/close_002.ogg", "purpose": "close panel", "durationSeconds": 0.314, "loop": false },
+    { "id": "ui-confirm", "file": "runtime/ui-confirm.ogg", "pack": "kenney-interface-sounds", "sourceFile": "Audio/confirmation_002.ogg", "purpose": "confirm and upgrade", "durationSeconds": 0.539, "loop": false },
+    { "id": "ui-error", "file": "runtime/ui-error.ogg", "pack": "kenney-interface-sounds", "sourceFile": "Audio/error_006.ogg", "purpose": "rejected action", "durationSeconds": 0.5, "loop": false },
+    { "id": "ui-open", "file": "runtime/ui-open.ogg", "pack": "kenney-interface-sounds", "sourceFile": "Audio/open_002.ogg", "purpose": "open panel", "durationSeconds": 0.314, "loop": false },
+    { "id": "ui-select", "file": "runtime/ui-select.ogg", "pack": "kenney-interface-sounds", "sourceFile": "Audio/select_004.ogg", "purpose": "tower selection", "durationSeconds": 0.383, "loop": false },
+    { "id": "wave-start", "file": "runtime/wave-start.ogg", "pack": "kenney-interface-sounds", "sourceFile": "Audio/bong_001.ogg", "purpose": "wave start", "durationSeconds": 0.123, "loop": false },
+    { "id": "victory", "file": "runtime/victory.ogg", "pack": "kenney-interface-sounds", "sourceFile": "Audio/confirmation_004.ogg", "purpose": "victory result", "durationSeconds": 0.491, "loop": false },
+    { "id": "defeat", "file": "runtime/defeat.ogg", "pack": "kenney-interface-sounds", "sourceFile": "Audio/back_003.ogg", "purpose": "defeat result", "durationSeconds": 0.093, "loop": false },
+    { "id": "tower-slow", "file": "runtime/tower-slow.ogg", "pack": "kenney-interface-sounds", "sourceFile": "Audio/glass_006.ogg", "purpose": "slow tower attack", "durationSeconds": 0.111, "loop": false },
+    { "id": "base-hit", "file": "runtime/base-hit.ogg", "pack": "kenney-rpg-audio", "sourceFile": "Audio/creak3.ogg", "purpose": "base damage", "durationSeconds": 0.338, "loop": false },
+    { "id": "build", "file": "runtime/build.ogg", "pack": "kenney-rpg-audio", "sourceFile": "Audio/metalClick.ogg", "purpose": "tower placement", "durationSeconds": 0.446, "loop": false },
+    { "id": "coin", "file": "runtime/coin.ogg", "pack": "kenney-rpg-audio", "sourceFile": "Audio/handleCoins2.ogg", "purpose": "reward and refund", "durationSeconds": 0.338, "loop": false },
+    { "id": "tower-basic", "file": "runtime/tower-basic.ogg", "pack": "kenney-rpg-audio", "sourceFile": "Audio/knifeSlice.ogg", "purpose": "basic tower attack", "durationSeconds": 0.6, "loop": false },
+    { "id": "tower-heavy", "file": "runtime/tower-heavy.ogg", "pack": "kenney-rpg-audio", "sourceFile": "Audio/metalPot1.ogg", "purpose": "heavy tower attack", "durationSeconds": 1.46, "loop": false },
+    { "id": "tower-aoe", "file": "runtime/tower-aoe.ogg", "pack": "kenney-rpg-audio", "sourceFile": "Audio/metalPot3.ogg", "purpose": "area tower attack", "durationSeconds": 0.907, "loop": false }
+  ]
+}

@@ -2,7 +2,7 @@ import { createGameEngine, FIXED_TICK_SECONDS, type GameEngine } from "@fantasy-
 import { validateMapSpec } from "@fantasy-frontiers/maps";
 import {
   BOT_CONFIG, DIFFICULTY_PROFILES, GAME_CONFIG, GAME_CONFIG_VERSION, SIMULATOR_CONFIG, simulationRunSchema,
-  type Coordinate, type GameAction, type GameObservation, type GameResult, type MapSpec, type SimulationRun,
+  type Coordinate, type GameAction, type GameObservation, type GameResult, type MapSpec, type SimulationActionRecord, type SimulationRun, type WavePlan,
 } from "@fantasy-frontiers/shared";
 
 export interface LookaheadResult {
@@ -204,8 +204,44 @@ function lookAhead(engine: GameEngine, action: GameAction, horizon: number): Loo
   };
 }
 
-export interface RunEpisodeOptions { map: MapSpec; seed?: number; policy: BotPolicy; runId?: string; maxTicks?: number }
-export interface RunBatchOptions { map: MapSpec; seeds: readonly number[]; policy: BotPolicy; batchId?: string; maxTicks?: number }
+export interface RunEpisodeOptions { map: MapSpec; wavePlan?: WavePlan; seed?: number; policy: BotPolicy; runId?: string; maxTicks?: number }
+export interface RunBatchOptions { map: MapSpec; wavePlan?: WavePlan; seeds: readonly number[]; policy: BotPolicy; batchId?: string; maxTicks?: number }
+export interface ReplayActionLogOptions { map: MapSpec; wavePlan?: WavePlan; seed?: number; actions: readonly SimulationActionRecord[]; maxTicks?: number }
+export interface ReplayActionLogResult { result: GameResult; totalTicks: number; verifiedActions: number }
+
+/** Replays recorded player commands against the same Core and checks every acceptance result. */
+export function replayActionLog(options: ReplayActionLogOptions): ReplayActionLogResult {
+  const validation = validateMapSpec(options.map);
+  if (!validation.valid) throw new SimulationError("invalid_map", `Replay requires a valid MapSpec: ${validation.issues.map(issue => issue.code).join(", ")}`);
+  const engine = createGameEngine({ map: options.map, seed: options.seed ?? options.map.seed, ...(options.wavePlan ? { wavePlan: options.wavePlan } : {}) });
+  const actions = [...options.actions].sort((a, b) => a.tick - b.tick);
+  const maxTicks = options.maxTicks ?? SIMULATOR_CONFIG.maxTicksPerRun;
+  let cursor = 0;
+  let totalTicks = 0;
+  while (!engine.result()) {
+    while (actions[cursor]?.tick === totalTicks) {
+      const expected = actions[cursor++]!;
+      const actual = engine.dispatch(expected.action);
+      if (actual.accepted !== expected.accepted || (!actual.accepted && expected.reason !== undefined && actual.reason !== expected.reason)) {
+        throw new SimulationError("rejected_bot_action", `Replay diverged at action ${cursor - 1}`);
+      }
+    }
+    if (engine.result()) break;
+    if (engine.state.status === "running") {
+      if (totalTicks >= maxTicks) throw new SimulationError("tick_limit", `Replay exceeded maxTicks=${maxTicks}`);
+      engine.step();
+      totalTicks++;
+      continue;
+    }
+    const next = actions[cursor];
+    if (!next) throw new SimulationError("invalid_result", "Action log ended before the game produced a result");
+    if (next.tick !== totalTicks) throw new SimulationError("invalid_policy_plan", "Action log cannot advance rule ticks while the game is not running");
+  }
+  const result = engine.result();
+  if (!result) throw new SimulationError("invalid_result", "Replay ended without a GameResult");
+  if (cursor !== actions.length) throw new SimulationError("invalid_policy_plan", "Action log contains commands after the game ended");
+  return { result, totalTicks, verifiedActions: cursor };
+}
 
 interface WaveStartSnapshot { waveIndex: number; hp: number; gold: number; stats: GameEngine["state"]["stats"]; }
 function makeWaveResult(start: WaveStartSnapshot, end: GameEngine["state"], completed: boolean, ticks: number) {
@@ -225,7 +261,7 @@ function makeWaveResult(start: WaveStartSnapshot, end: GameEngine["state"], comp
 export function runEpisode(options: RunEpisodeOptions): SimulationRun {
   const validation = validateMapSpec(options.map);
   if (!validation.valid) throw new SimulationError("invalid_map", `Simulator requires a valid MapSpec: ${validation.issues.map(issue => issue.code).join(", ")}`);
-  const engine = createGameEngine({ map: options.map, seed: options.seed ?? options.map.seed });
+  const engine = createGameEngine({ map: options.map, seed: options.seed ?? options.map.seed, ...(options.wavePlan ? { wavePlan: options.wavePlan } : {}) });
   const normalizedSeed = engine.state.seed;
   const maxTicks = options.maxTicks ?? SIMULATOR_CONFIG.maxTicksPerRun;
   if (!Number.isSafeInteger(maxTicks) || maxTicks <= 0) throw new RangeError("maxTicks must be a positive safe integer");
@@ -275,6 +311,7 @@ export function runEpisode(options: RunEpisodeOptions): SimulationRun {
     resultId: `${id}-result`,
     mapId: options.map.id,
     map: engine.map,
+    ...(options.wavePlan ? { wavePlan: options.wavePlan } : {}),
     seed: normalizedSeed,
     configVersion: GAME_CONFIG_VERSION,
     configuration: structuredClone(GAME_CONFIG),
@@ -291,6 +328,7 @@ export function runEpisode(options: RunEpisodeOptions): SimulationRun {
 export function runBatch(options: RunBatchOptions): SimulationRun[] {
   return options.seeds.map((seed, index) => runEpisode({
     map: options.map,
+    ...(options.wavePlan ? { wavePlan: options.wavePlan } : {}),
     seed,
     policy: options.policy,
     runId: `run-${options.batchId ?? `${options.map.id}-${options.policy.id}`}-${index}-${seed >>> 0}`,
@@ -321,7 +359,7 @@ export function compareRuns(leftRuns: readonly SimulationRun[], rightRuns: reado
   const pairs = leftRuns.map((left, index) => {
     const right = rightRuns[index]!;
     if (left.seed !== right.seed || left.mapId !== right.mapId || left.configVersion !== right.configVersion
-      || JSON.stringify(left.map) !== JSON.stringify(right.map) || JSON.stringify(left.configuration) !== JSON.stringify(right.configuration)) {
+      || JSON.stringify(left.map) !== JSON.stringify(right.map) || JSON.stringify(left.wavePlan) !== JSON.stringify(right.wavePlan) || JSON.stringify(left.configuration) !== JSON.stringify(right.configuration)) {
       throw new RangeError("Compared runs must use matching maps, configurations, and seeds in the same order");
     }
     return {

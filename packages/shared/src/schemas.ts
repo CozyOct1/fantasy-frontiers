@@ -184,6 +184,44 @@ export const mapSpecSchema = z.object({
 });
 export type MapSpec = z.infer<typeof mapSpecSchema>;
 
+export const spawnEventSchema = z.object({ tick: z.number().int().nonnegative(), archetype: enemyArchetypeSchema, pathId: z.string().min(1) }).strict();
+export const waveDefinitionDraftSchema = z.object({
+  index: z.number().int().positive(), label: z.string().max(80).default(""), events: z.array(spawnEventSchema).max(160),
+}).strict();
+export const wavePlanDraftSchema = z.object({
+  version: z.literal(1), id: z.string().min(1), tickRate: z.number().int().positive(), waves: z.array(waveDefinitionDraftSchema).max(20),
+}).strict();
+export type WavePlanDraft = z.infer<typeof wavePlanDraftSchema>;
+
+/** Authoring data may be incomplete; only compilation may create playable MapSpec and WavePlan data. */
+export const mapDraftSchema = z.object({
+  id: z.string().min(1), schemaVersion: z.literal(1), revision: z.number().int().nonnegative(),
+  name: z.string().trim().min(1).max(80), notes: z.string().max(600).default(""),
+  difficulty: difficultySchema, width: z.literal(12), height: z.literal(8), seed: z.number().int().nonnegative(),
+  base: coordinateSchema.nullable(),
+  spawns: z.array(z.object({ id: z.string().min(1), position: coordinateSchema })).max(3),
+  paths: z.array(z.object({ id: z.string().min(1), spawnId: z.string().min(1), tiles: z.array(coordinateSchema) })).max(3),
+  buildSlots: z.array(coordinateSchema), obstacles: z.array(coordinateSchema), tags: z.array(z.string().trim().min(1).max(32)).max(12),
+  wavePlan: wavePlanDraftSchema.optional(),
+}).strict();
+export type MapDraft = z.infer<typeof mapDraftSchema>;
+
+export const waveDefinitionSchema = z.object({
+  index: z.number().int().positive(), label: z.string().max(80).default(""), events: z.array(spawnEventSchema).min(1).max(160),
+}).strict();
+export const wavePlanSchema = z.object({
+  version: z.literal(1), id: z.string().min(1), tickRate: z.number().int().positive(), waves: z.array(waveDefinitionSchema).min(1).max(20),
+}).strict();
+export type WavePlan = z.infer<typeof wavePlanSchema>;
+
+export const mapTemplateRevisionSchema = z.object({
+  id: z.string().min(1), templateId: z.string().min(1), revision: z.number().int().positive(),
+  sourceDraftId: z.string().min(1), sourceDraftRevision: z.number().int().nonnegative(),
+  validatorVersion: z.string().min(1), contentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  map: mapSpecSchema, wavePlan: wavePlanSchema.optional(), status: z.enum(["active", "withdrawn"]), createdAt: z.string().datetime(),
+}).strict();
+export type MapTemplateRevision = z.infer<typeof mapTemplateRevisionSchema>;
+
 export const towerStateSchema = z.object({ id: z.string(), archetype: towerArchetypeSchema, level: z.number().int().positive(), position: coordinateSchema, cooldown: z.number().nonnegative() });
 export const enemyStateSchema = z.object({ id: z.string(), archetype: enemyArchetypeSchema, hp: z.number().nonnegative(), maxHp: z.number().positive(), pathId: z.string(), pathProgress: z.number().nonnegative(), slowUntil: z.number().nonnegative() });
 export const gameStatusSchema = z.enum(["ready", "running", "paused", "won", "lost"]);
@@ -196,12 +234,14 @@ export const gameStateSchema = z.object({
   levelId: z.string(), status: gameStatusSchema, hp: z.number().nonnegative(), maxHp: z.number().positive(),
   gold: z.number().nonnegative(), waveIndex: z.number().int().nonnegative(), totalWaves: z.number().int().positive(),
   towers: z.array(towerStateSchema), enemies: z.array(enemyStateSchema), elapsedTime: z.number().nonnegative(), seed: z.number().int().nonnegative(),
-  activeWaveQueue: z.array(enemyArchetypeSchema), spawnTimer: z.number().nonnegative(), nextEntityId: z.number().int().positive(), stats: gameStatsSchema,
+  activeWaveQueue: z.array(enemyArchetypeSchema), activeWavePathQueue: z.array(z.string()).optional(), activeWaveDelayQueue: z.array(z.number().nonnegative()).optional(),
+  spawnTimer: z.number().nonnegative(), nextEntityId: z.number().int().positive(), stats: gameStatsSchema,
 });
 export type GameState = z.infer<typeof gameStateSchema>;
 export const gameActionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("placeTower"), archetype: towerArchetypeSchema, position: coordinateSchema }),
   z.object({ type: z.literal("upgradeTower"), towerId: z.string().min(1) }),
+  z.object({ type: z.literal("sellTower"), towerId: z.string().min(1) }),
   z.object({ type: z.literal("startWave") }),
   z.object({ type: z.literal("pause") }),
   z.object({ type: z.literal("resume") }),
@@ -222,13 +262,14 @@ export const gameResultSchema = z.object({
 });
 export type GameResult = z.infer<typeof gameResultSchema>;
 export const simulationActionRecordSchema = z.object({ tick: z.number().int().nonnegative(), action: gameActionSchema, accepted: z.boolean(), reason: z.string().optional() });
+export type SimulationActionRecord = z.infer<typeof simulationActionRecordSchema>;
 export const simulationWaveResultSchema = z.object({
   waveIndex: z.number().int().positive(), completed: z.boolean(), startingHp: z.number().nonnegative(), remainingHp: z.number().nonnegative(),
   enemiesSpawned: z.number().int().nonnegative(), enemiesKilled: z.number().int().nonnegative(), enemiesLeaked: z.number().int().nonnegative(),
   goldEarned: z.number().nonnegative(), goldSpent: z.number().nonnegative(), towerUsage: z.record(z.string(), z.number().nonnegative()), ticks: z.number().int().nonnegative(),
 });
 export const simulationRunSchema = z.object({
-  id: z.string().min(1), resultId: z.string().min(1), mapId: z.string().min(1), map: mapSpecSchema,
+  id: z.string().min(1), resultId: z.string().min(1), mapId: z.string().min(1), map: mapSpecSchema, wavePlan: wavePlanSchema.optional(),
   seed: z.number().int().nonnegative(), configVersion: z.string().min(1), configuration: z.record(z.string(), z.unknown()),
   policyId: z.string().min(1), policyVersion: z.string().min(1), totalTicks: z.number().int().nonnegative(),
   actions: z.array(simulationActionRecordSchema), waves: z.array(simulationWaveResultSchema), result: gameResultSchema,
@@ -258,7 +299,8 @@ export type EvaluationRecord = z.infer<typeof evaluationRecordSchema>;
 // introducing a second MapSpec or GameResult definition.
 export const levelRecordSchema = z.object({
   id: z.string().min(1), worldId: z.string().min(1), difficulty: difficultySchema,
-  name: z.string().min(1), story: z.string(), map: mapSpecSchema,
+  name: z.string().min(1), story: z.string(), map: mapSpecSchema, wavePlan: wavePlanSchema.optional(),
+  contentVersion: z.number().int().positive().optional(), rulesetVersion: z.string().min(1).optional(),
 });
 export type LevelRecord = z.infer<typeof levelRecordSchema>;
 export const playerProgressSchema = z.object({
@@ -267,7 +309,10 @@ export const playerProgressSchema = z.object({
   updatedAt: z.string().datetime(),
 });
 export type PlayerProgress = z.infer<typeof playerProgressSchema>;
-export const gameRunStartSchema = z.object({ runId: z.string().min(1), levelId: z.string().min(1), seed: z.number().int().nonnegative(), map: mapSpecSchema });
+export const gameRunStartSchema = z.object({
+  runId: z.string().min(1), levelId: z.string().min(1), seed: z.number().int().nonnegative(), map: mapSpecSchema,
+  wavePlan: wavePlanSchema.optional(), contentVersion: z.number().int().positive().optional(), rulesetVersion: z.string().min(1).optional(),
+});
 export type GameRunStart = z.infer<typeof gameRunStartSchema>;
 export const gameRunStartRequestSchema = z.object({ playerId: z.string().min(1).optional(), seed: z.number().int().nonnegative().optional() }).strict();
 export type GameRunStartRequest = z.infer<typeof gameRunStartRequestSchema>;

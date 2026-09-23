@@ -2,12 +2,15 @@
   "schemaVersion": 3,
   "status": "PASS",
   "verify": {
-    "command": "pnpm test:e2e --workers=2",
+    "command": "pnpm verify && pnpm exec playwright test --workers=1 --trace=off",
     "exitCode": 0,
     "suites": [
-      "12 Playwright scenarios passed; production-only smoke skipped in the default suite",
+      "16 Playwright scenarios passed; production-only smoke skipped in the default suite, then passed explicitly",
       "Desktop, 390x844 / 360x640 portrait, 844x390 landscape, reduced motion, and emulated touch input checked",
-      "pnpm verify passed: typecheck, 52 Vitest tests, production build"
+      "pnpm verify passed with exit 0: typecheck, 18 Vitest files / 68 tests, production build",
+      "Map Workshop covered map and wave editing, shared validation, isolated same-Core preview, local fallback, server draft API, immutable publish, and production base-path navigation",
+      "V6 browser evidence covered audio unlock and settings persistence, WavePlan threat briefing, contextual tower role, upgrade, sell and refund",
+      "All 19 local runtime audio files were parsed successfully with ffprobe"
     ]
   },
   "completeRun": {
@@ -28,8 +31,11 @@
   "limitations": [
     { "scope": "physical mobile device", "reason": "Viewport and touch emulation passed in Chromium; physical-device input, thermal and sustained performance were not available." },
     { "scope": "bundle size", "reason": "Phaser application chunk is approximately 1.59 MB and still emits Vite's 500 KB chunk warning." },
-    { "scope": "commercial art finish", "reason": "The modular framework is implemented; stock castle/vegetation and outlined combat sprites still need a bespoke style-unification pass." },
-    { "scope": "production deployment and live AI", "reason": "Not exercised or changed in this pass. Default E2E skips the production preview scenario; existing-world play was verified without generation requests." },
-    { "scope": "test resource contention", "reason": "An earlier concurrent browser/unit run timed out. Separate final verify and two-worker browser runs passed without relaxing test limits." }
+    { "scope": "battle music transfer", "reason": "The battle music asset is approximately 2.85 MB and lazy-loads on entering battle; mobile-network first-battle latency still requires physical-device measurement." },
+    { "scope": "human playability", "reason": "No five-person or two-round target-player test was run. Medium two-strategy evidence and a reproducible Hard human win remain unverified." },
+    { "scope": "commercial art finish", "reason": "Forest, crystal, rift and floating-city compositions are differentiated. Stock castle/vegetation and outlined combat sprites still need a bespoke style-unification pass; same-family worlds reuse approved assets." },
+    { "scope": "production deployment and live AI", "reason": "The local production-preview subpath was exercised, including Map Workshop navigation. A real deployed server and live AI generation were not changed or exercised." },
+    { "scope": "verification history", "reason": "The first V6 full browser run exposed a mobile onboarding overlay intercepting legal map touches. The guide was made pointer-transparent during action steps; focused mobile and subsequent full browser suites passed." },
+    { "scope": "additional viewport matrix", "reason": "720x1280 and 1080x2400 portrait were not tested in this pass; tested portrait viewports were 390x844 and 360x640." }
   ]
 }

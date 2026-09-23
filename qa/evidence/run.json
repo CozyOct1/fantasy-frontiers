@@ -4,12 +4,12 @@
   "environment": "Playwright Chromium desktop browser; Vite development build and isolated Node.js/SQLite server.",
   "inputTrace": [
     "Clicked 2× speed; speed label changed from 1× to 2×.",
-    "Clicked 开始第一波; Easy wave 1 started.",
-    "Clicked 开始下一波; Easy wave 2 started.",
-    "Clicked 开始下一波; Easy wave 3 started.",
-    "Clicked 开始下一波; Easy wave 4 started.",
-    "Clicked 开始下一波; Easy wave 5 started.",
-    "Clicked 开始下一波; Easy wave 6 started.",
+    "Clicked 开始 · 前线试探; Easy wave 1 started.",
+    "Clicked 开始 · 前线试探; Easy wave 2 started.",
+    "Clicked 开始 · 迅捷突袭; Easy wave 3 started.",
+    "Clicked 开始 · 前线试探; Easy wave 4 started.",
+    "Clicked 开始 · 迅捷突袭; Easy wave 5 started.",
+    "Clicked 开始 · 重甲推进; Easy wave 6 started.",
     "Game reached designed terminal outcome: 胜利 · 防线守住了.",
     "Returned from the result to the current world's detail in the Hub.",
     "Returned to the Hub, selected Easy, and launched a fresh run from the initial state.",
@@ -35,19 +35,19 @@
       "id": "player-input",
       "inputs": [
         "Clicked 2× speed; speed label changed from 1× to 2×.",
-        "Clicked 开始第一波; Easy wave 1 started."
+        "Clicked 开始 · 前线试探; Easy wave 1 started."
       ],
       "state": "Speed control accepted browser input and updated its visible state."
     },
     "coreLoop": {
       "id": "easy-campaign-loop",
       "inputs": [
-        "Clicked 开始第一波; Easy wave 1 started.",
-        "Clicked 开始下一波; Easy wave 2 started.",
-        "Clicked 开始下一波; Easy wave 3 started.",
-        "Clicked 开始下一波; Easy wave 4 started.",
-        "Clicked 开始下一波; Easy wave 5 started.",
-        "Clicked 开始下一波; Easy wave 6 started."
+        "Clicked 开始 · 前线试探; Easy wave 1 started.",
+        "Clicked 开始 · 前线试探; Easy wave 2 started.",
+        "Clicked 开始 · 迅捷突袭; Easy wave 3 started.",
+        "Clicked 开始 · 前线试探; Easy wave 4 started.",
+        "Clicked 开始 · 迅捷突袭; Easy wave 5 started.",
+        "Clicked 开始 · 重甲推进; Easy wave 6 started."
       ],
       "state": "Easy waves advanced through the shared playable game runtime."
     },

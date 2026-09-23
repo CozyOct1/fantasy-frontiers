@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SeededRng, campaignOutputSchema, campaignSpecSchema, enemyThemeOutputSchema, enemyThemeSpecSchema, mapSpecSchema, themeOutputSchema, towerThemeOutputSchema, towerThemeSpecSchema, worldIdentityOutputSchema, worldSkinSchema, worldSpecSchema, type CampaignSpec, type Difficulty, type EnemyThemeSpec, type GenerationStep, type LevelRecord, type TowerThemeSpec, type WorldSpec } from "@fantasy-frontiers/shared";
-import { generateMap, validateMapSpec } from "@fantasy-frontiers/maps";
+import { createBenchmarkContent, validateMapSpec } from "@fantasy-frontiers/maps";
 import { DeepSeekError, type JsonModel } from "./deepseek.js";
 import { AppStore } from "./store.js";
 import { loadAssetLibrary, resolveWorldTheme } from "./theme-resolver.js";
@@ -103,18 +103,15 @@ export class CreativeWorkflow {
     const campaign = campaignSpecSchema.parse({ id: `${worldId}-campaign`, worldId, name: campaignOutput.name, levels: campaignOutput.levels.map(entry => ({
       id: `${worldId}-${entry.difficulty}`, difficulty: entry.difficulty, name: entry.name, story: entry.story, semanticTags: entry.semanticTags,
     })) });
-    let templateSeed = new SeededRng(seed);
     const selectedTemplates: string[] = [];
     for (const difficulty of ["easy", "medium", "hard"] as const satisfies readonly Difficulty[]) {
       const narrative = campaignOutput.levels.find(entry => entry.difficulty === difficulty)!;
-      const mapSeed = templateSeed.nextUint32();
-      const generated = generateMap({ difficulty, seed: mapSeed, preferredTags: narrative.preferredTemplateTags, previousTemplateIds: selectedTemplates });
-      if (!generated.ok) throw new Error(`Map generation failed for ${difficulty}: ${generated.code}`);
-      const map = mapSpecSchema.parse({ ...generated.map, id: `${worldId}-${difficulty}` });
+      const authored = createBenchmarkContent(difficulty, `${worldId}-${difficulty}`);
+      const map = mapSpecSchema.parse({ ...authored.map, id: `${worldId}-${difficulty}`, seed: new SeededRng(seed + selectedTemplates.length).nextUint32(), tags: [...authored.map.tags, ...narrative.preferredTemplateTags] });
       const validation = validateMapSpec(map);
       if (!validation.valid) throw new Error(`Map validation failed for ${difficulty}: ${validation.issues.map(issue => issue.code).join(",")}`);
       selectedTemplates.push(map.templateId);
-      levels.push({ id: `${worldId}-${difficulty}`, worldId, difficulty, name: narrative.name, story: narrative.story, map });
+      levels.push({ id: `${worldId}-${difficulty}`, worldId, difficulty, name: narrative.name, story: narrative.story, map, wavePlan: authored.wavePlan, contentVersion: 1, rulesetVersion: "v1.0.0" });
     }
     if (new Set(levels.map(level => level.map.templateId)).size !== 3) throw new Error("Campaign maps must use three distinct templates");
     return { world, towerTheme, enemyTheme, campaign, skin, levels };

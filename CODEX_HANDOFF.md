@@ -1,5 +1,66 @@
 # CODEX_HANDOFF
 
+## Latest pass — complete map workshop and production path repair (2026-09-22)
+
+- Phase: production internal authoring tool. Fixed the workshop navigation defect: links, preview entry and preview return now resolve through the Vite base path, so `/fantasy-frontiers/` deployments no longer escape to the domain root/another application.
+- Expanded the workshop from spatial editing into a complete level-authoring loop: 12×8 map tools, per-route drawing, metadata, undo/redo, wave list, wave labels, enemy batch scheduling by type/route/count/start/interval, controlled baseline-wave generation, and full map + wave validation.
+- Preview serializes canonical `MapSpec + WavePlan` and runs the same Game Core used by campaign play. It stays isolated from campaign start/result writes.
+- Added local persistence and JSON round-trip. When `ENABLE_MAP_EDITOR=1`, the UI also supports server draft listing/loading/sync, optimistic revision conflicts, server validation, and idempotent immutable publication; otherwise it clearly falls back to local mode.
+- Shared/server contracts now include editable wave-plan data and published revisions retain the validated wave plan. LLM output still cannot author coordinates, stats, economy, or legality rules.
+- Verification: `pnpm verify` passed (18 Vitest files / 68 tests); full Playwright with one worker and trace off passed (16 passed, production-only smoke skipped); explicit production smoke passed and verified home → workshop → return under `/fantasy-frontiers/`; focused editor, mobile-touch and storybook reruns passed. One parallel Playwright run hit trace-artifact ENOENT; the serial no-trace run is the final browser verdict.
+- Remaining boundary: this is an internal desktop-first authoring tool, not public UGC. Collaborative editing, arbitrary scripts/stats, direct publication into campaign catalogs, and human balance approval remain out of scope.
+
+## Latest pass — V6 playable UI / gameplay / audio slice (2026-09-22)
+
+- Phase: production candidate. V6's automated technical slice is complete; human fun/balance and physical-device release gates remain open.
+- Added an event-driven Easy onboarding, real WavePlan threat brief, config/state-backed tower role panel, and factual result recap. The non-modal guide was corrected to pass map touches through during action steps.
+- Added canonical between-wave `sellTower` behavior with Core-owned refund calculation, player UI confirmation, events, tests and same-Core Simulator action-log replay.
+- Added `AudioDirector`: browser gesture unlock, local-only lazy loading, lobby/battle scene loops, music ducking, master/music/effects preferences, mute/reduced-intensity settings, priority/cooldown controls, 24-voice cap, suspend/resume and silent fallback.
+- Added 19 controlled runtime audio assets plus source/license manifests under `assets/library/audio/`; UI continues using the controlled Kenney Fantasy UI border asset.
+- Verification: `pnpm verify` passed (18 Vitest files / 66 tests, typecheck, production build). Full Playwright passed with 16 tests and the existing production-preview-only smoke test skipped. All 19 audio files passed `ffprobe` decoding.
+- Evidence boundary: no five-person/two-round playtest, physical mobile audio/performance pass, Medium two-strategy proof, or Hard human/action-replay win exists yet. Do not claim commercial balance or completed V6 release gates.
+- Next safest task: conduct the first five-person Easy/Medium/Hard playtest and record action logs; use those results to decide whether sell/refund stays and to build the first reproducible Hard-winning replay before changing numbers.
+
+## Latest pass — V6 UI / gameplay / audio plan (2026-09-22)
+
+- Phase: production-readiness planning only; no runtime behavior, balance, assets, APIs or database data changed.
+- Added `docs/v6/plan.md`, a phased vertical-slice plan integrating UI readability, decision quality and semantic audio feedback around one player loop.
+- Confirmed current audio sliders only persist settings; there is no runtime music/SFX system. V6 therefore starts with browser audio unlock, lifecycle, buses, priority/voice limits and silent fallback before asset expansion.
+- Gameplay scope remains four towers/four enemies. The plan prioritizes authored encounter decisions, onboarding, deterministic action replay and evidence-based failure recap; sell/refund is only a gated prototype candidate.
+- UI scope consolidates the battle HUD, adds contextual threat/tower/result information, and requires physical mobile readability/touch evidence without introducing a new frontend framework.
+- Remaining first gate: five-person baseline playtest, Hard human/action-replay solvability evidence, UI audit and licensed audio cue inventory.
+
+## Latest pass — V5 playable authoring vertical slice (2026-09-22)
+
+- Phase: production vertical slice. The former V5 planning-only state is superseded by a runnable implementation; human playtest gates remain open.
+- Added canonical `MapDraft`, immutable template revision and explicit `WavePlan` contracts. Game Core, player runtime, Simulator and Evaluation Workflow consume the same deterministic wave data.
+- Added three fixed-layout benchmark levels, next-wave briefing, reproducible `pnpm balance:v5` evidence and `docs/v5/balance-design.md`. Current automation warns that Easy/Medium are permissive for some bots while Hard defeats all current bots; this is not a human balance verdict.
+- Added `/map-editor.html`: desktop grid authoring for base, up to three entrances, selectable ordered paths, build slots and obstacles; undo/redo, local save, JSON import/export, live validation and isolated Phaser preview. Preview never starts/saves a campaign run.
+- Added default-off editor APIs (`ENABLE_MAP_EDITOR=1`), optimistic draft revisions, validated/idempotent immutable publish, additive SQLite migration, and run content/ruleset snapshots.
+- Creative Workflow now selects controlled authored layouts/waves and only applies semantic tags; the LLM does not set coordinates, stats or spawn timing.
+- Verification: `pnpm verify` passed (17 files / 62 tests, typecheck, production build). Full Playwright passed: 14 tests, with the production-deployment-only smoke test skipped by its existing environment gate.
+- Remaining gates: two rounds of target-player tests, physical mobile-device verification, Hard human action replay, and evidence-based final number tuning. Do not claim commercial balance or fun before these are complete.
+
+## Latest pass — V5 gameplay and authoring plan (2026-09-21)
+
+- Phase: discovery / vertical-slice planning only. User priority moved from art polish to playability, map authoring and numerical design.
+- Added `docs/v5/plan.md`: source-backed audit, one-level proof before tooling, internal desktop map editor, immutable template/level revisions, preview isolation, controlled wave plans, balance experiments, three-level campaign and AI reuse gates.
+- Existing foundations are retained: controlled templates, centralized stats, pure deterministic Core and shared Simulator/Metrics. Key gaps: shuffled free-cell build slots, sampled wave composition, absent editor, and player runs without complete content snapshots.
+- No gameplay, configuration, API, database, asset or test changes in this pass. Existing uncommitted presentation work was preserved.
+- Verification: documentation references and scoped diff reviewed; no new runtime tests, balance runs, player tests or `pnpm verify` executed for this documentation-only task. All V5 implementation milestones remain pending.
+- Next safest task: approve P0 and author one fixed-layout greybox encounter using existing rules; collect strategic-choice and authoring-cost evidence before implementing the editor. Earlier art-first next steps below are historical, not the current priority.
+
+## Latest pass — storybook feedback implementation
+
+- Phase: presentation polish / vertical-slice iteration; no gameplay, persistence or AI workflow rules changed.
+- Added `storybook-realms.ts`: controlled forest/crystal/rift profiles, floating-city composition detection, cosmetic channel selection and config-derived tower descriptions.
+- Lobby now reports real campaign completion, fully completed worlds and available tower archetype count. No invented XP, stars, unlock rewards, or auto-wave timers.
+- World covers use different focal assets/geography, with satellite-island layout for floating cities; saved enemy names appear on cards. Battlefield palettes and decorative river/bridges/props use the same semantic profile.
+- Selected towers reveal actual damage/range/rate in the existing message area. Hover shows legal/insufficient/invalid feedback and projected core-distance range. Unaffordable towers can be inspected; core still rejects unaffordable placement. Re-click cancels selection.
+- Verification: final `pnpm verify` exit 0 (56 unit tests, types, build); full `pnpm test:e2e --workers=2` exit 0 (13 passed, 1 production-only skipped). Following two CSS visibility corrections, `pnpm exec playwright test tests/e2e/storybook.spec.ts --workers=1` passed. Initial theme test lacked confirmation-dialog handling; test fixed, game exit behavior unchanged. Screenshot review caught and corrected cropped card focal objects and desktop hint/entrance-label overlap.
+- Risks: stock-art stylistic mismatch, no physical device performance evidence, same-family worlds share approved art, bridges are cosmetic only. No external services or production data mutated.
+- Next: inspect final three-biome screenshots and physical-device readability; replace mismatched art before claiming commercial finish.
+
 ## Current handoff — 2026-09-21 modular fantasy presentation
 
 - Scope: lobby, battle rendering, shared UI and responsive input; no core mechanics, server workflows, stats, dependencies, or production deployment changed.
